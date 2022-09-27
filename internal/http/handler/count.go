@@ -7,7 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/config"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/hold"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/msg"
 
@@ -31,7 +30,8 @@ func (h *Handlers) Register(group *echo.Group, middlewares []echo.MiddlewareFunc
 
 	var err error
 
-	h.successCounter, err = h.Meter.Meter(config.LoadConfig.AppName).SyncInt64().Counter("success", instrument.WithDescription("number of success count"))
+	h.successCounter, err = h.Meter.Meter("").
+		SyncInt64().Counter("success", instrument.WithDescription("number of success count"))
 	if err != nil {
 		log.Panic().Msgf("failed to initialize successCounter; %w", err)
 	}

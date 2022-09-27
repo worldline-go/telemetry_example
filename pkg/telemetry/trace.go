@@ -10,8 +10,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Get provider and don't forget to shutdown after usage, it will help to flush last messages.
@@ -28,14 +26,9 @@ type ProviderConfig struct {
 	ID          string
 }
 
-func TracerProvider(ctx context.Context, url string, pc ProviderConfig) (*tracesdk.TracerProvider, error) {
-	conn, err := grpc.DialContext(ctx, url, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
-	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
-	}
-
+func (c *Collector) TracerProvider(ctx context.Context, pc ProviderConfig) (*tracesdk.TracerProvider, error) {
 	// Set up a trace exporter
-	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
+	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(c.Conn))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
 	}
@@ -87,7 +80,7 @@ func TracerProvider(ctx context.Context, url string, pc ProviderConfig) (*traces
 
 // TracerProviderJaeger to export directly jaeger http://localhost:14268/api/traces
 // Don't use this one.
-func TracerProviderJaeger(ctx context.Context, url string, pc ProviderConfig) (*tracesdk.TracerProvider, error) {
+func (c *Collector) TracerProviderJaeger(ctx context.Context, url string, pc ProviderConfig) (*tracesdk.TracerProvider, error) {
 	// Create the Jaeger exporter
 	exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(url)))
 	if err != nil {

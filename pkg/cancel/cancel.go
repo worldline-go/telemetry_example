@@ -30,9 +30,10 @@ func (r *Registry) Cancel() {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	for _, fn := range r.functions {
-		if err := fn.Fn(); err != nil {
-			log.Error().Err(err).Msg(fn.Name)
+	// cancel opposite
+	for i := len(r.functions) - 1; i >= 0; i-- {
+		if err := r.functions[i].Fn(); err != nil {
+			log.Error().Err(err).Msg(r.functions[i].Name)
 		}
 	}
 

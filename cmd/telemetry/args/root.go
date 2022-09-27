@@ -97,8 +97,17 @@ func runRoot(ctxParent context.Context) (err error) {
 		return fmt.Errorf("uuid gen failed; %w", err)
 	}
 
-	// "http://localhost:14268/api/traces"
-	tProvider, err := telemetry.TracerProvider(ctx, "localhost:4317", telemetry.ProviderConfig{
+	collector, err := new(telemetry.Collector).Connect(ctx, config.Application.Collector)
+	if err != nil {
+		return fmt.Errorf("failed to start collector; %w", err)
+	}
+
+	cReg.Register(cancel.Function{
+		Fn:   collector.Conn.Close,
+		Name: "collector close",
+	})
+
+	tProvider, err := collector.TracerProvider(ctx, telemetry.ProviderConfig{
 		Service:     config.LoadConfig.AppName,
 		Environment: "TEST",
 		ID:          gen.String(),
@@ -117,7 +126,7 @@ func runRoot(ctxParent context.Context) (err error) {
 		Name: "trace provider",
 	})
 
-	mProvider, err := telemetry.MetricProvider(ctx, "localhost:4317")
+	mProvider, err := collector.MetricProvider(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to set metric provider; %w", err)
 	}

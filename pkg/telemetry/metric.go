@@ -3,11 +3,10 @@ package telemetry
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	metricsdk "go.opentelemetry.io/otel/sdk/metric"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // MetricProvider open grpc connection and send metrics to the collector.
@@ -16,19 +15,20 @@ import (
 //
 // Shutdown after usage
 // meterProvider.Shutdown(ctx)
-func MetricProvider(ctx context.Context, url string) (*metricsdk.MeterProvider, error) {
-	conn, err := grpc.DialContext(ctx, url, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
-	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
-	}
-
+func (c *Collector) MetricProvider(ctx context.Context) (*metricsdk.MeterProvider, error) {
 	// Set up a trace exporter
-	metricExporter, err := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithGRPCConn(conn))
+	metricExporter, err := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithGRPCConn(c.Conn))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
 	}
 
-	meterProvider := metricsdk.NewMeterProvider(metricsdk.WithReader(metricsdk.NewPeriodicReader(metricExporter)))
+	meterProvider := metricsdk.NewMeterProvider(
+		metricsdk.WithReader(
+			metricsdk.NewPeriodicReader(
+				metricExporter, metricsdk.WithInterval(2*time.Second),
+			),
+		),
+	)
 
 	// metric.WithInstrumentationVersion(),
 	// meterProvider.Meter(pc.Service, metric.WithSchemaURL(semconv.SchemaURL)).AsyncFloat64().Counter()
