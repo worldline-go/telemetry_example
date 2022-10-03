@@ -9,6 +9,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	swag "github.com/swaggo/echo-swagger"
@@ -37,6 +39,8 @@ type RouterSettings struct {
 
 	TracerProvider *tracesdk.TracerProvider
 	MetricProvider *metricsdk.MeterProvider
+
+	PrometheusCollector prometheus.Collector
 }
 
 func (rs RouterSettings) SetDefaults() RouterSettings {
@@ -95,8 +99,24 @@ func NewRouter(rs RouterSettings) *Router {
 // @host
 // @BasePath /api/v1
 func (r *Router) Register(basePath string, middlewares []echo.MiddlewareFunc) {
-	v1 := r.echo.Group(path.Join("/", basePath, "/api/v1"))
+	z := r.echo.Group("")
+	basement := ""
 
+	if basePath != "" {
+		basement = path.Join("/", basePath)
+		z = r.echo.Group(basement)
+	}
+
+	if r.rs.PrometheusCollector != nil {
+		log.Info().Msgf("metrics on %s", path.Join(basement, "/metrics"))
+
+		registry := prometheus.NewRegistry()
+		registry.MustRegister(r.rs.PrometheusCollector)
+
+		z.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(registry, promhttp.HandlerOpts{})))
+	}
+
+	v1 := z.Group("/api/v1")
 	h := handler.Handlers{
 		Counter: &r.counter,
 		Tracer:  r.rs.TracerProvider,

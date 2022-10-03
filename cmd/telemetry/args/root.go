@@ -97,7 +97,7 @@ func runRoot(ctxParent context.Context) (err error) {
 		return fmt.Errorf("uuid gen failed; %w", err)
 	}
 
-	collector, err := new(telemetry.Collector).Connect(ctx, config.Application.Collector)
+	collector, err := new(telemetry.Collector).ConnectGRPC(ctx, config.Application.Collector)
 	if err != nil {
 		return fmt.Errorf("failed to start collector; %w", err)
 	}
@@ -126,10 +126,14 @@ func runRoot(ctxParent context.Context) (err error) {
 		Name: "trace provider",
 	})
 
-	mProvider, err := collector.MetricProvider(ctx)
+	mCollectorReader, err := collector.MetricCollector(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to set metric provider; %w", err)
 	}
+
+	mPrometheusExporter := collector.MetricPrometheus()
+
+	mProvider := collector.MetricProvider(mCollectorReader, mPrometheusExporter)
 
 	cReg.Register(cancel.Function{
 		Fn: func() error {
@@ -146,6 +150,8 @@ func runRoot(ctxParent context.Context) (err error) {
 		Host:           config.Application.Host + ":" + config.Application.Port,
 		TracerProvider: tProvider,
 		MetricProvider: mProvider,
+
+		PrometheusCollector: mPrometheusExporter.Collector,
 	})
 
 	cReg.Register(cancel.Function{

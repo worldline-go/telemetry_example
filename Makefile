@@ -13,12 +13,17 @@ SWAG_VERSION := $(shell grep github.com/swaggo/swag go.mod | xargs echo | cut -d
 GOLANGCI_CONFIG_URL   := https://gitlab.test.igdcs.com/finops/devops/cicd/runner/raw/master/.golangci.yml
 GOLANGCI_LINT_VERSION := v1.49.0
 
+DOCKER_IMAGE_NAME := telemetry:dev
+
 .DEFAULT_GOAL := help
 
-.PHONY: build golangci docs lint clean data test test-env env env-destroy run postgres postgres-destroy kafka kafka-producer kafka-consumer help
+.PHONY: build docker golangci docs lint clean data test test-env env env-destroy run postgres postgres-destroy kafka kafka-producer kafka-consumer help
 
 build: docs ## Build project
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w -X $(PKG)/config.AppVersion=$(VERSION)" -o $(PROJECT) $(PKG_MAIN)
+
+docker: build
+	tar -cf - deployments/docker/scratch.Dockerfile telemetry | docker build -t $(DOCKER_IMAGE_NAME) -f deployments/docker/scratch.Dockerfile -
 
 bin/swag-$(SWAG_VERSION):
 	@echo "> downloading swag@$(SWAG_VERSION)"
@@ -71,6 +76,9 @@ env-destroy: ## Stops the dependencies in the dev environment and destroys the d
 # CONFIG_FILE=./config/local.yml go run $(PKG_MAIN)
 run: ## Run service
 	go run $(PKG_MAIN)
+
+run-docker: ## Run service in docker
+	docker run -it --rm -p 8080:8080 --net telemetry_default -e USER=X -v $(PWD)/configs/docker.yml:/telemetry.yml $(DOCKER_IMAGE_NAME)
 
 postgres: ## Initialize a postgresql
 	docker run -d --name postgres -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust postgres:13.8-alpine

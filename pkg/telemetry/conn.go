@@ -12,7 +12,7 @@ type Collector struct {
 	Conn *grpc.ClientConn
 }
 
-func (c *Collector) Connect(ctx context.Context, url string) (*Collector, error) {
+func (c *Collector) ConnectGRPC(ctx context.Context, url string) (*Collector, error) {
 	conn, err := grpc.DialContext(ctx, url,
 		grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {

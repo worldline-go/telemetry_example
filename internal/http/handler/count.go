@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/instrument"
+	"go.opentelemetry.io/otel/metric/instrument/syncfloat64"
 	"go.opentelemetry.io/otel/metric/instrument/syncint64"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -22,7 +23,13 @@ type Handlers struct {
 	Tracer  trace.TracerProvider
 	Meter   metric.MeterProvider
 
-	successCounter syncint64.Counter
+	metrics struct {
+		successCounter syncint64.Counter
+		sendGauge      syncint64.UpDownCounter
+		valuehistogram syncfloat64.Histogram
+
+		commonAttributes []attribute.KeyValue
+	}
 }
 
 func (h *Handlers) Register(group *echo.Group, middlewares []echo.MiddlewareFunc) {
@@ -30,11 +37,25 @@ func (h *Handlers) Register(group *echo.Group, middlewares []echo.MiddlewareFunc
 
 	var err error
 
-	h.successCounter, err = h.Meter.Meter("").
+	h.metrics.successCounter, err = h.Meter.Meter("").
 		SyncInt64().Counter("success", instrument.WithDescription("number of success count"))
 	if err != nil {
 		log.Panic().Msgf("failed to initialize successCounter; %w", err)
 	}
+
+	h.metrics.sendGauge, err = h.Meter.Meter("").
+		SyncInt64().UpDownCounter("send", instrument.WithDescription("last send value"))
+	if err != nil {
+		log.Panic().Msgf("failed to initialize sendGauge; %w", err)
+	}
+
+	h.metrics.valuehistogram, err = h.Meter.Meter("").
+		SyncFloat64().Histogram("histogram", instrument.WithDescription("value histogram"))
+	if err != nil {
+		log.Panic().Msgf("failed to initialize valuehistogram; %w", err)
+	}
+
+	h.metrics.commonAttributes = append(h.metrics.commonAttributes, attribute.Key("special").String("X"))
 }
 
 // GetCount
@@ -67,7 +88,9 @@ func (h *Handlers) GetCount(c echo.Context) error {
 	// Store n as a string to not overflow an int64.
 	span.SetAttributes(attribute.String("request.count", count))
 
-	h.successCounter.Add(c.Request().Context(), 1)
+	h.metrics.successCounter.Add(c.Request().Context(), 1, h.metrics.commonAttributes...)
+	h.metrics.sendGauge.Add(c.Request().Context(), countInt, h.metrics.commonAttributes...)
+	h.metrics.valuehistogram.Record(c.Request().Context(), float64(countInt)/10, h.metrics.commonAttributes...)
 
 	newResult := h.Counter.Add(countInt)
 
