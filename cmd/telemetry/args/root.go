@@ -8,9 +8,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -19,7 +17,9 @@ import (
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/config"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/cancel"
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/telemetry"
+	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell"
+	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell/metric/instrumentation/metricecho"
+	"go.opentelemetry.io/contrib/instrumentation/runtime"
 )
 
 var rootCmd = &cobra.Command{
@@ -92,66 +92,33 @@ func runRoot(ctxParent context.Context) (err error) {
 		cReg.Cancel()
 	}()
 
-	gen, err := uuid.NewV7()
+	metricEchoViews, err := metricecho.GetViews()
 	if err != nil {
-		return fmt.Errorf("uuid gen failed; %w", err)
+		return fmt.Errorf("failed to get metricecho views; %w", err)
 	}
 
-	collector, err := new(telemetry.Collector).ConnectGRPC(ctx, config.Application.Collector)
+	collector, err := tell.New(ctx, config.Application.Telemetry, metricEchoViews...)
 	if err != nil {
-		return fmt.Errorf("failed to start collector; %w", err)
-	}
-
-	cReg.Register(cancel.Function{
-		Fn:   collector.Conn.Close,
-		Name: "collector close",
-	})
-
-	tProvider, err := collector.TracerProvider(ctx, telemetry.ProviderConfig{
-		Service:     config.LoadConfig.AppName,
-		Environment: "TEST",
-		ID:          gen.String(),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to set trace provider; %w", err)
+		return fmt.Errorf("failed to init telemetry; %w", err)
 	}
 
 	cReg.Register(cancel.Function{
-		Fn: func() error {
-			ctx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer ctxCancel()
-
-			return tProvider.Shutdown(ctx)
-		},
-		Name: "trace provider",
+		Fn:   collector.Shutdown,
+		Name: "collector",
 	})
 
-	mCollectorReader, err := collector.MetricCollector(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to set metric provider; %w", err)
+	if err := runtime.Start(); err != nil {
+		return fmt.Errorf("failed to start runtime metrics; %w", err)
 	}
-
-	mPrometheusExporter := collector.MetricPrometheus()
-
-	mProvider := collector.MetricProvider(mCollectorReader, mPrometheusExporter)
-
-	cReg.Register(cancel.Function{
-		Fn: func() error {
-			ctx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer ctxCancel()
-
-			return mProvider.Shutdown(ctx)
-		},
-		Name: "metric provider",
-	})
 
 	// run server
 	router := http.NewRouter(http.RouterSettings{
-		Host:           config.Application.Host + ":" + config.Application.Port,
-		TracerProvider: tProvider,
-		MetricProvider: mProvider,
+		Host:      config.Application.Host + ":" + config.Application.Port,
+		Telemetry: collector,
+		// TracerProvider: tProvider,
+		// MetricProvider: collector.MeterProvider,
 
-		PrometheusCollector: mPrometheusExporter.Collector,
+		// PrometheusCollector: collector.MetricReaders.Prometheus
 	})
 
 	cReg.Register(cancel.Function{

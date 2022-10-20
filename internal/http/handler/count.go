@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -13,6 +14,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/instrument"
+	"go.opentelemetry.io/otel/metric/instrument/asyncint64"
 	"go.opentelemetry.io/otel/metric/instrument/syncfloat64"
 	"go.opentelemetry.io/otel/metric/instrument/syncint64"
 	"go.opentelemetry.io/otel/trace"
@@ -25,15 +27,21 @@ type Handlers struct {
 
 	metrics struct {
 		successCounter syncint64.Counter
-		sendGauge      syncint64.UpDownCounter
+		counterUpDown  syncint64.UpDownCounter
+		sendGauge      asyncint64.Gauge
 		valuehistogram syncfloat64.Histogram
 
 		commonAttributes []attribute.KeyValue
+
+		RegisterCallback func(insts []instrument.Asynchronous, function func(context.Context))
+
+		currentValue int64
 	}
 }
 
 func (h *Handlers) Register(group *echo.Group, middlewares []echo.MiddlewareFunc) {
 	group.GET("/count", h.GetCount, middlewares...)
+	group.POST("/count", h.PostCount, middlewares...)
 
 	var err error
 
@@ -43,17 +51,25 @@ func (h *Handlers) Register(group *echo.Group, middlewares []echo.MiddlewareFunc
 		log.Panic().Msgf("failed to initialize successCounter; %w", err)
 	}
 
-	h.metrics.sendGauge, err = h.Meter.Meter("").
-		SyncInt64().UpDownCounter("send", instrument.WithDescription("last send value"))
-	if err != nil {
-		log.Panic().Msgf("failed to initialize sendGauge; %w", err)
-	}
-
 	h.metrics.valuehistogram, err = h.Meter.Meter("").
 		SyncFloat64().Histogram("histogram", instrument.WithDescription("value histogram"))
 	if err != nil {
 		log.Panic().Msgf("failed to initialize valuehistogram; %w", err)
 	}
+
+	h.metrics.counterUpDown, err = h.Meter.Meter("").SyncInt64().UpDownCounter("updown", instrument.WithDescription("async gauge"))
+	if err != nil {
+		log.Panic().Msgf("failed to initialize sendGauge; %w", err)
+	}
+
+	h.metrics.sendGauge, err = h.Meter.Meter("").AsyncInt64().Gauge("send", instrument.WithDescription("async gauge"))
+	if err != nil {
+		log.Panic().Msgf("failed to initialize sendGauge; %w", err)
+	}
+
+	h.Meter.Meter("").RegisterCallback([]instrument.Asynchronous{h.metrics.sendGauge}, func(ctx context.Context) {
+		h.metrics.sendGauge.Observe(ctx, h.metrics.currentValue, h.metrics.commonAttributes...)
+	})
 
 	h.metrics.commonAttributes = append(h.metrics.commonAttributes, attribute.Key("special").String("X"))
 }
@@ -65,11 +81,35 @@ func (h *Handlers) Register(group *echo.Group, middlewares []echo.MiddlewareFunc
 // @Produce     json
 // @Router      /count [get]
 // @Security    ApiKeyAuth
-// @Param       count query int false "Count Value"
 // @Success     200 {object} msg.WebApiSuccess{}
 // @Failure     400 {object} msg.WebApiError{}
 func (h *Handlers) GetCount(c echo.Context) error {
 	_, span := h.Tracer.Tracer(c.Path()).Start(c.Request().Context(), "GetCount")
+	defer span.End()
+
+	count := h.Counter.Get()
+	// Store n as a string to not overflow an int64.
+	span.SetAttributes(attribute.Int64("request.count.get", count))
+
+	h.metrics.counterUpDown.Add(c.Request().Context(), 1, h.metrics.commonAttributes...)
+
+	return c.JSON(http.StatusOK, msg.API{
+		Data: h.Counter.Get(),
+	})
+}
+
+// PostCount
+//
+// @Summary     Add new count
+// @Description Add new count
+// @Produce     json
+// @Router      /count [post]
+// @Security    ApiKeyAuth
+// @Param       count query int false "Count Value"
+// @Success     200 {object} msg.WebApiSuccess{}
+// @Failure     400 {object} msg.WebApiError{}
+func (h *Handlers) PostCount(c echo.Context) error {
+	_, span := h.Tracer.Tracer(c.Path()).Start(c.Request().Context(), "PostCount")
 	defer span.End()
 
 	countInt := int64(0)
@@ -85,14 +125,18 @@ func (h *Handlers) GetCount(c echo.Context) error {
 			})
 		}
 	}
-	// Store n as a string to not overflow an int64.
-	span.SetAttributes(attribute.String("request.count", count))
+
+	span.SetAttributes(attribute.Int64("request.count.set", countInt))
 
 	h.metrics.successCounter.Add(c.Request().Context(), 1, h.metrics.commonAttributes...)
-	h.metrics.sendGauge.Add(c.Request().Context(), countInt, h.metrics.commonAttributes...)
-	h.metrics.valuehistogram.Record(c.Request().Context(), float64(countInt)/10, h.metrics.commonAttributes...)
+
+	h.metrics.valuehistogram.Record(c.Request().Context(), float64(countInt), h.metrics.commonAttributes...)
 
 	newResult := h.Counter.Add(countInt)
+
+	h.metrics.currentValue = newResult
+
+	h.metrics.counterUpDown.Add(c.Request().Context(), 1, h.metrics.commonAttributes...)
 
 	return c.JSON(http.StatusOK, msg.API{
 		Data: newResult,

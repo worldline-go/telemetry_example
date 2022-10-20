@@ -21,6 +21,7 @@ func Load(ctx context.Context, visit func(fn func(*pflag.Flag)), overrideValues 
 	ctxConfig := logConfig.WithContext(ctx)
 
 	loaders := []loader.Loader{
+		&loader.Default{},
 		&loader.Consul{},
 		&loader.Vault{},
 		&loader.File{},

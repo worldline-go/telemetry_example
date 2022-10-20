@@ -1,6 +1,10 @@
 package config
 
-import "time"
+import (
+	"time"
+
+	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell"
+)
 
 var (
 	AppName    = "telemetry"
@@ -22,14 +26,9 @@ var LoadConfig = struct {
 }
 
 var Application = struct {
-	LogLevel  string `cfg:"log_level"`
-	Host      string `cfg:"host"`
-	Port      string `cfg:"port"`
+	LogLevel  string `cfg:"log_level" default:"info"`
+	Host      string `cfg:"host" default:"0.0.0.0"`
+	Port      string `cfg:"port" default:"8080"`
 	BasePath  string `cfg:"base_path"`
-	Collector string `cfg:"collector" env:"OTEL_EXPORTER_OTLP_ENDPOINT"`
-}{
-	LogLevel:  "info",
-	Host:      "0.0.0.0",
-	Port:      "8080",
-	Collector: "localhost:4317",
-}
+	Telemetry tell.Config
+}{}

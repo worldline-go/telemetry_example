@@ -1,2 +1,5 @@
 /bin
 /telemetry
+
+/go.work
+/go.work.sum
