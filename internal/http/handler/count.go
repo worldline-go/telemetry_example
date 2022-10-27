@@ -126,7 +126,7 @@ func (h *Handlers) PostCount(c echo.Context) error {
 		}
 	}
 
-	span.SetAttributes(attribute.Int64("request.count.set", countInt))
+	span.SetAttributes(attribute.Key("request.count.set").Int64(countInt))
 
 	h.metrics.successCounter.Add(c.Request().Context(), 1, h.metrics.commonAttributes...)
 

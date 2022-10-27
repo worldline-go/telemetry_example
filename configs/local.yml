@@ -1,1 +1,2 @@
-collector: "localhost:4317"
+telemetry:
+  collector: "localhost:4317"

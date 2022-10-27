@@ -1,1 +1,2 @@
-collector: "otel-collector:4317"
+telemetry:
+  collector: "otel-collector:4317"

@@ -83,7 +83,7 @@ env-swarm-ps:
 env-swarm-destroy:
 	docker stack rm $(PROJECT)
 	# wait for delete complete
-	until [[ -z $(shell docker stack ps $(PROJECT) -q 2>/dev/null) ]]; do sleep 1; done
+	until [[ -z "$(shell docker stack ps $(PROJECT) -q 2>/dev/null)" ]]; do sleep 1; done
 
 # CONFIG_FILE=./configs/local.yml go run $(PKG_MAIN)
 run: ## Run program
