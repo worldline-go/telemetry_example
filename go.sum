@@ -464,8 +464,8 @@ github.com/yuin/goldmark v1.4.0/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/ziflex/lecho/v2 v2.5.2 h1:MLCNS5BflZf1c7draa2vUK5gFkyL6dGWPhfYB+eXu9Y=
 github.com/ziflex/lecho/v2 v2.5.2/go.mod h1:sqrt0SoTqEi1+oHrw3aOlMJNatEEiq7TflLPAM/aLlA=
-gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell v0.1.1 h1:7IP8/gUJEXQcOe1zy0quJpaBsr1b01Zf3HJysTtTU/4=
-gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell v0.1.1/go.mod h1:5P51+gK7bZlkrBs8CjVJQhPFXOfOpc0R5g04M7sShy8=
+gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell v0.1.2 h1:mkjANH0c6tpT5rTxFmD/rtMgC6w+ucnweuFRm0eUS48=
+gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell v0.1.2/go.mod h1:3qA915bYl5enGTHeOdcJi0CZrKSCb6vdL6ilddAlkPk=
 gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell/metric/instrumentation/metricecho v0.1.1 h1:u2BEdOCjBLjTdo5mqfh4qq0vGsJJ//S4ClZzH+rzuME=
 gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell/metric/instrumentation/metricecho v0.1.1/go.mod h1:bYl6b/X0mnJI8ol+zwZ12tz2j6dY3yC03BHjqgFHIG8=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
