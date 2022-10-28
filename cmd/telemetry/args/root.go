@@ -16,10 +16,11 @@ import (
 
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/config"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http"
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/cancel"
+	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/telemetry"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell/metric/instrumentation/metricecho"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var rootCmd = &cobra.Command{
@@ -70,8 +71,10 @@ func runRoot(ctxParent context.Context) (err error) {
 	ctx, ctxCancel := context.WithCancel(ctxParent)
 	defer ctxCancel()
 
-	// cancel registry
-	cReg := cancel.Registry{}
+	// get router
+	router := http.NewRouter(http.RouterSettings{
+		Host: config.Application.Host + ":" + config.Application.Port,
+	})
 
 	wg.Add(1)
 
@@ -85,13 +88,18 @@ func runRoot(ctxParent context.Context) (err error) {
 		case <-sig:
 			log.Warn().Msg("received shutdown signal...")
 			ctxCancel()
+
+			if err != nil {
+				err = ErrShutdown
+			}
 		case <-ctx.Done():
 			log.Warn().Msg("service closed")
 		}
 
-		cReg.Cancel()
+		router.Stop()
 	}()
 
+	// open telemetry
 	metricEchoViews, err := metricecho.GetViews()
 	if err != nil {
 		return fmt.Errorf("failed to get metricecho views; %w", err)
@@ -102,30 +110,18 @@ func runRoot(ctxParent context.Context) (err error) {
 		return fmt.Errorf("failed to init telemetry; %w", err)
 	}
 
-	cReg.Register(cancel.Function{
-		Fn:   collector.Shutdown,
-		Name: "collector",
-	})
+	defer collector.Shutdown()
+
+	telemetry.AddGlobalAttr(attribute.Key("special").String("X"))
+	if err := telemetry.SetGlobalMeter(); err != nil {
+		return fmt.Errorf("failed to set metric; %w", err)
+	}
 
 	if err := runtime.Start(); err != nil {
 		return fmt.Errorf("failed to start runtime metrics; %w", err)
 	}
 
 	// run server
-	router := http.NewRouter(http.RouterSettings{
-		Host:      config.Application.Host + ":" + config.Application.Port,
-		Telemetry: collector,
-		// TracerProvider: tProvider,
-		// MetricProvider: collector.MeterProvider,
-
-		// PrometheusCollector: collector.MetricReaders.Prometheus
-	})
-
-	cReg.Register(cancel.Function{
-		Fn:   router.Stop,
-		Name: "http server",
-	})
-
 	if err := router.Start(); err != nil {
 		return err
 	}

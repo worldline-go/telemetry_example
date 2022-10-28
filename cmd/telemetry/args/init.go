@@ -1,6 +1,11 @@
 package args
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+var ErrShutdown = errors.New("shutting down signal received")
 
 func InitializeFlags() {
 	RootCmdFlags()

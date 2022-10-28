@@ -83,10 +83,11 @@ env-swarm-ps:
 env-swarm-destroy:
 	docker stack rm $(PROJECT)
 	# wait for delete complete
-	until [[ -z "$(shell docker stack ps $(PROJECT) -q 2>/dev/null)" ]]; do sleep 1; done
+	@until [[ -z "$(shell docker stack ps $(PROJECT) -q 2>/dev/null)" ]]; do sleep 1; done
 
 # CONFIG_FILE=./configs/local.yml go run $(PKG_MAIN)
 run: ## Run program
+	OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317 \
 	OTEL_RESOURCE_ATTRIBUTES=service.name=telemetry,service.instance.id=1 \
 	CONFIG_FILE=./configs/local.yml \
 	go run $(PKG_MAIN)
@@ -94,11 +95,13 @@ run: ## Run program
 run-docker: ## Run program in docker
 	docker run -it --rm -p 8080:8080 --net $(PROJECT)_default -e OTEL_RESOURCE_ATTRIBUTES=service.name=telemetry $(DOCKER_IMAGE_NAME)
 
+# OTEL_RESOURCE_ATTRIBUTES='"service.name={{slice .Service.Name 10}},service.instance.id={{.Task.ID}},host.id={{.Node.ID}},host.name={{.Node.Hostname}}"'
 run-service: SCALE ?= 1
 run-service: ## Run program as service
 	docker service create -p 8080:8080 --network telemetry_default --name $(PROJECT)_$(PROJECT) \
 	--replicas $(SCALE) \
-	-e OTEL_RESOURCE_ATTRIBUTES=service.name={{.Service.Name}},service.instance.id={{.Task.ID}},host.id={{.Node.ID}},host.name={{.Node.Hostname}} \
+	-e OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317 \
+	-e OTEL_RESOURCE_ATTRIBUTES='service.name={{slice .Service.Name 10}},service.instance.id={{.Task.ID}},host.id={{.Node.ID}},host.name={{.Node.Hostname}}' \
 	$(DOCKER_IMAGE_NAME)
 
 rm-service: ## Remove program service

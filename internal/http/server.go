@@ -15,13 +15,13 @@ import (
 	"github.com/worldline-go/logz"
 	"github.com/ziflex/lecho/v2"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+	"go.opentelemetry.io/otel"
 
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/docs"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/config"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http/handler"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http/middle"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/hold"
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell/metric/instrumentation/metricecho"
 )
 
@@ -34,8 +34,6 @@ type RouterSettings struct {
 	BasePath string
 	// ShutdownTimeout using in shutdown server default is 5 second.
 	ShutdownTimeout time.Duration
-
-	Telemetry *tell.Collector
 }
 
 func (rs RouterSettings) SetDefaults() RouterSettings {
@@ -71,7 +69,7 @@ func NewRouter(rs RouterSettings) *Router {
 	e.Use(metricecho.HTTPMetrics(nil))
 
 	// add otel tracing
-	e.Use(otelecho.Middleware(config.LoadConfig.AppName, otelecho.WithTracerProvider(rs.Telemetry.TracerProvider)))
+	e.Use(otelecho.Middleware(config.LoadConfig.AppName, otelecho.WithTracerProvider(otel.GetTracerProvider())))
 
 	docs.SetVersion()
 
@@ -117,8 +115,6 @@ func (r *Router) Register(basePath string, middlewares []echo.MiddlewareFunc) {
 	v1 := z.Group("/api/v1")
 	h := handler.Handlers{
 		Counter: &r.counter,
-		Tracer:  r.rs.Telemetry.TracerProvider,
-		Meter:   r.rs.Telemetry.MeterProvider,
 	}
 
 	h.Register(v1, middlewares)
