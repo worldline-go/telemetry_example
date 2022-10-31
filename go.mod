@@ -12,7 +12,7 @@ require (
 	github.com/worldline-go/igconfig v0.1.0
 	github.com/worldline-go/logz v0.2.1
 	github.com/ziflex/lecho/v2 v2.5.2
-	gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell v0.1.4
+	gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell v0.1.5
 	gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell/metric/instrumentation/metricecho v0.1.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.36.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.36.3
