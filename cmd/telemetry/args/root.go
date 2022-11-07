@@ -18,7 +18,6 @@ import (
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/telemetry"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell"
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell/metric/instrumentation/metricecho"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -99,13 +98,7 @@ func runRoot(ctxParent context.Context) (err error) {
 		router.Stop()
 	}()
 
-	// open telemetry
-	metricEchoViews, err := metricecho.GetViews()
-	if err != nil {
-		return fmt.Errorf("failed to get metricecho views; %w", err)
-	}
-
-	collector, err := tell.New(ctx, config.Application.Telemetry, metricEchoViews...)
+	collector, err := tell.New(ctx, config.Application.Telemetry)
 	if err != nil {
 		return fmt.Errorf("failed to init telemetry; %w", err)
 	}

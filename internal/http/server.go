@@ -22,7 +22,7 @@ import (
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http/handler"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http/middle"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/hold"
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell/metric/instrumentation/metricecho"
+	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell/metric/metricecho"
 )
 
 var shutdownTimeout = 5 * time.Second
