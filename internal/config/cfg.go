@@ -3,7 +3,7 @@ package config
 import (
 	"time"
 
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell"
+	"github.com/worldline-go/tell"
 )
 
 var (

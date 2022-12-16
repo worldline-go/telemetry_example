@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	swag "github.com/swaggo/echo-swagger"
 	"github.com/worldline-go/logz"
+	"github.com/worldline-go/tell/metric/metricecho"
 	"github.com/ziflex/lecho/v2"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	"go.opentelemetry.io/otel"
@@ -22,7 +23,6 @@ import (
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http/handler"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http/middle"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/hold"
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell/metric/metricecho"
 )
 
 var shutdownTimeout = 5 * time.Second

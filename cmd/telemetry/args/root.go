@@ -13,11 +13,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/worldline-go/logz"
+	"github.com/worldline-go/tell"
 
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/config"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/telemetry"
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/attribute"
 )

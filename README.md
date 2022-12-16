@@ -58,4 +58,4 @@ Still need to someone reload/restart prometheus to detect new configuration.
 
 ## Metric / Trace
 
-Check the https://gitlab.test.igdcs.com/finops/nextgen/utils/metrics/tell
+Check the https://github.com/worldline-go/tell
