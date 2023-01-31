@@ -17,7 +17,7 @@ OpenTelemetry good to send send trace and metric data to different platform.
 Initialize compose-file
 
 ```sh
-make swarm
+make env
 ```
 
 After that run this example program

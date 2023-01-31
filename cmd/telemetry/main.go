@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	logz.InitializeLog(nil)
+	logz.InitializeLog(logz.WithCaller(false))
 
 	if err := args.Execute(context.Background()); err != nil {
 		if !errors.Is(err, args.ErrShutdown) {

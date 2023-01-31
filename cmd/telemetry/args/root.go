@@ -18,7 +18,6 @@ import (
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/config"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http"
 	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/telemetry"
-	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -110,9 +109,9 @@ func runRoot(ctxParent context.Context) (err error) {
 		return fmt.Errorf("failed to set metric; %w", err)
 	}
 
-	if err := runtime.Start(); err != nil {
-		return fmt.Errorf("failed to start runtime metrics; %w", err)
-	}
+	// if err := runtime.Start(); err != nil {
+	// 	return fmt.Errorf("failed to start runtime metrics; %w", err)
+	// }
 
 	// run server
 	if err := router.Start(); err != nil {
