@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/worldline-go/logz"
 
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/cmd/telemetry/args"
+	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/cmd/telemetry/args"
 )
 
 func main() {

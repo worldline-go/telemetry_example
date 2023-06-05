@@ -4,7 +4,7 @@ PKG_MAIN = cmd/telemetry/main.go
 VERSION := $(or $(IMAGE_TAG),$(shell git describe --tags --first-parent --match "v*" 2> /dev/null || echo v0.0.0))
 LOCAL_BIN_DIR := $(PWD)/bin
 
-DOCKER_COMPOSE := docker-compose --project-name=$(PROJECT) --file=deployments/compose/compose.yml
+DOCKER_COMPOSE := docker compose --project-name=$(PROJECT) --file=deployments/compose/compose.yml
 DOCKER_SWARM := docker stack deploy --prune --with-registry-auth -c deployments/compose/compose.yml
 
 ## swaggo configuration
@@ -12,7 +12,7 @@ SWAG_VERSION := $(shell grep github.com/swaggo/swag go.mod | xargs echo | cut -d
 
 ## golangci configuration
 GOLANGCI_CONFIG_URL   := https://gitlab.test.igdcs.com/finops/devops/cicd/runner/raw/master/.golangci.yml
-GOLANGCI_LINT_VERSION := v1.49.0
+GOLANGCI_LINT_VERSION := v1.52.2
 
 DOCKER_IMAGE_NAME := telemetry:dev
 

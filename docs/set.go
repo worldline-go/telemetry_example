@@ -5,7 +5,7 @@ import (
 
 	"github.com/swaggo/swag"
 
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/config"
+	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/internal/config"
 )
 
 func SetVersion() {

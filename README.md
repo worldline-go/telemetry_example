@@ -23,7 +23,7 @@ make env
 After that run this example program
 
 ```sh
-make run
+make docs run
 ```
 
 Go to localhost 3000 for grafana and login with `admin:admin`.

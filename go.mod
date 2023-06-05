@@ -1,4 +1,4 @@
-module gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example
+module gitlab.global.ingenico.com/finops/sandbox/telemetry_example
 
 go 1.18
 

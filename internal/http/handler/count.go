@@ -6,9 +6,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/hold"
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/msg"
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/telemetry"
+	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/pkg/hold"
+	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/pkg/msg"
+	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/pkg/telemetry"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"

@@ -15,9 +15,9 @@ import (
 	"github.com/worldline-go/logz"
 	"github.com/worldline-go/tell"
 
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/config"
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/internal/http"
-	"gitlab.test.igdcs.com/finops/nextgen/utils/metrics/telemetry_example/pkg/telemetry"
+	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/internal/config"
+	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/internal/http"
+	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/pkg/telemetry"
 	"go.opentelemetry.io/otel/attribute"
 )
 
