@@ -20,10 +20,16 @@ Initialize compose-file
 make env
 ```
 
-After that run this example program
+After that run this example program, run command set the otel env variables to open telemetry connection in code.
 
 ```sh
 make docs run
+```
+
+Run without opentelemetry
+
+```sh
+make run-without
 ```
 
 <details><summary>Details</summary>

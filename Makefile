@@ -92,6 +92,10 @@ run: ## Run program
 	CONFIG_FILE=./configs/local.yml \
 	go run $(PKG_MAIN)
 
+run-without: ## Run program without telemetry
+	CONFIG_FILE=./configs/local.yml \
+	go run $(PKG_MAIN)
+
 run-docker: ## Run program in docker
 	docker run -it --rm -p 8080:8080 --net $(PROJECT)_default -e OTEL_RESOURCE_ATTRIBUTES=service.name=telemetry $(DOCKER_IMAGE_NAME)
 
