@@ -1,4 +1,4 @@
-module gitlab.global.ingenico.com/finops/sandbox/telemetry_example
+module github.com/worldline-go/telemetry_example
 
 go 1.18
 

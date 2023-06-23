@@ -6,9 +6,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/pkg/hold"
-	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/pkg/msg"
-	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/pkg/telemetry"
+	"github.com/worldline-go/telemetry_example/pkg/hold"
+	"github.com/worldline-go/telemetry_example/pkg/msg"
+	"github.com/worldline-go/telemetry_example/pkg/telemetry"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"

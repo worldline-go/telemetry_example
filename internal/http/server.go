@@ -18,11 +18,11 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	"go.opentelemetry.io/otel"
 
-	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/docs"
-	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/internal/config"
-	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/internal/http/handler"
-	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/internal/http/middle"
-	"gitlab.global.ingenico.com/finops/sandbox/telemetry_example/pkg/hold"
+	"github.com/worldline-go/telemetry_example/docs"
+	"github.com/worldline-go/telemetry_example/internal/config"
+	"github.com/worldline-go/telemetry_example/internal/http/handler"
+	"github.com/worldline-go/telemetry_example/internal/http/middle"
+	"github.com/worldline-go/telemetry_example/pkg/hold"
 )
 
 var shutdownTimeout = 5 * time.Second
