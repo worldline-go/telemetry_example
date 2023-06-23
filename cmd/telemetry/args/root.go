@@ -17,7 +17,7 @@ import (
 
 	"github.com/worldline-go/telemetry_example/internal/config"
 	"github.com/worldline-go/telemetry_example/internal/http"
-	"github.com/worldline-go/telemetry_example/pkg/telemetry"
+	"github.com/worldline-go/telemetry_example/internal/telemetry"
 	"go.opentelemetry.io/otel/attribute"
 )
 

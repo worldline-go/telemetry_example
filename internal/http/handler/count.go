@@ -6,12 +6,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/worldline-go/telemetry_example/pkg/hold"
-	"github.com/worldline-go/telemetry_example/pkg/msg"
-	"github.com/worldline-go/telemetry_example/pkg/telemetry"
+	"github.com/worldline-go/telemetry_example/internal/hold"
+	"github.com/worldline-go/telemetry_example/internal/msg"
+	"github.com/worldline-go/telemetry_example/internal/telemetry"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 )
 
 type Handlers struct {
@@ -40,7 +41,7 @@ func (h *Handlers) GetCount(c echo.Context) error {
 	// Store n as a string to not overflow an int64.
 	span.SetAttributes(attribute.Int64("request.count.get", count))
 
-	telemetry.GlobalMeter.UpDownCounter.Add(c.Request().Context(), 1, telemetry.GlobalAttr...)
+	telemetry.GlobalMeter.UpDownCounter.Add(c.Request().Context(), 1, metric.WithAttributes(telemetry.GlobalAttr...))
 
 	return c.JSON(http.StatusOK, msg.API{
 		Data: h.Counter.Get(),
@@ -77,13 +78,13 @@ func (h *Handlers) PostCount(c echo.Context) error {
 
 	span.SetAttributes(attribute.Key("request.count.set").Int64(countInt))
 
-	telemetry.GlobalMeter.SuccessCounter.Add(c.Request().Context(), 1, telemetry.GlobalAttr...)
-	telemetry.GlobalMeter.HistogramCounter.Record(c.Request().Context(), float64(countInt), telemetry.GlobalAttr...)
+	telemetry.GlobalMeter.SuccessCounter.Add(c.Request().Context(), 1, metric.WithAttributes(telemetry.GlobalAttr...))
+	telemetry.GlobalMeter.HistogramCounter.Record(c.Request().Context(), float64(countInt), metric.WithAttributes(telemetry.GlobalAttr...))
 
 	newResult := h.Counter.Add(countInt)
 	telemetry.WatchValue = newResult
 
-	telemetry.GlobalMeter.UpDownCounter.Add(c.Request().Context(), 1, telemetry.GlobalAttr...)
+	telemetry.GlobalMeter.UpDownCounter.Add(c.Request().Context(), 1, metric.WithAttributes(telemetry.GlobalAttr...))
 
 	return c.JSON(http.StatusOK, msg.API{
 		Data: newResult,

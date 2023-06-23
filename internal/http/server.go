@@ -20,9 +20,9 @@ import (
 
 	"github.com/worldline-go/telemetry_example/docs"
 	"github.com/worldline-go/telemetry_example/internal/config"
+	"github.com/worldline-go/telemetry_example/internal/hold"
 	"github.com/worldline-go/telemetry_example/internal/http/handler"
 	"github.com/worldline-go/telemetry_example/internal/http/middle"
-	"github.com/worldline-go/telemetry_example/pkg/hold"
 )
 
 var shutdownTimeout = 5 * time.Second
