@@ -11,10 +11,9 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	swag "github.com/swaggo/echo-swagger"
-	"github.com/worldline-go/logz"
+	swag "github.com/worldline-go/echo-swagger"
 	"github.com/worldline-go/tell/metric/metricecho"
-	"github.com/ziflex/lecho/v2"
+	"github.com/ziflex/lecho/v3"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	"go.opentelemetry.io/otel"
 
@@ -58,7 +57,7 @@ func NewRouter(rs RouterSettings) *Router {
 	e := echo.New()
 	e.HideBanner = true
 
-	e.Logger = lecho.From(log.Logger.Hook(logz.Hooks.InfoHook))
+	e.Logger = lecho.From(log.Logger)
 	// e.Validator = util.NewValidator()
 
 	e.Use(middleware.Recover())

@@ -3,15 +3,12 @@ package args
 import (
 	"context"
 	"fmt"
-	"os"
-	"os/signal"
 	"strings"
-	"sync"
-	"syscall"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/worldline-go/initializer"
 	"github.com/worldline-go/logz"
 	"github.com/worldline-go/tell"
 
@@ -60,48 +57,17 @@ func RootCmdFlags() {
 	rootCmd.PersistentFlags().StringVarP(&config.Application.LogLevel, "log-level", "l", config.Application.LogLevel, "Log level")
 }
 
-func runRoot(ctxParent context.Context) (err error) {
-	wg := &sync.WaitGroup{}
-	defer func() {
-		wg.Wait()
-	}()
-
-	ctx, ctxCancel := context.WithCancel(ctxParent)
-	defer ctxCancel()
-
+func runRoot(ctx context.Context) (err error) {
 	// get router
 	router := http.NewRouter(http.RouterSettings{
 		Host: config.Application.Host + ":" + config.Application.Port,
 	})
-
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-
-		sig := make(chan os.Signal, 1)
-		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
-
-		select {
-		case <-sig:
-			log.Warn().Msg("received shutdown signal...")
-			ctxCancel()
-
-			if err != nil {
-				err = ErrShutdown
-			}
-		case <-ctx.Done():
-			log.Warn().Msg("service closed")
-		}
-
-		router.Stop()
-	}()
+	initializer.Shutdown.Add(router.Stop)
 
 	collector, err := tell.New(ctx, config.Application.Telemetry)
 	if err != nil {
 		return fmt.Errorf("failed to init telemetry; %w", err)
 	}
-
 	defer collector.Shutdown()
 
 	telemetry.AddGlobalAttr(attribute.Key("special").String("X"))
@@ -114,9 +80,5 @@ func runRoot(ctxParent context.Context) (err error) {
 	// }
 
 	// run server
-	if err := router.Start(); err != nil {
-		return err
-	}
-
-	return nil
+	return router.Start()
 }

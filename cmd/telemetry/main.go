@@ -2,23 +2,21 @@ package main
 
 import (
 	"context"
-	"errors"
-	"os"
+	"sync"
 
-	"github.com/rs/zerolog/log"
+	"github.com/worldline-go/initializer"
 	"github.com/worldline-go/logz"
 
 	"github.com/worldline-go/telemetry_example/cmd/telemetry/args"
 )
 
 func main() {
-	logz.InitializeLog(logz.WithCaller(false))
+	initializer.Init(
+		run,
+		initializer.WithOptionsLogz(logz.WithCaller(false)),
+	)
+}
 
-	if err := args.Execute(context.Background()); err != nil {
-		if !errors.Is(err, args.ErrShutdown) {
-			log.Error().Err(err).Msg("failed to execute command")
-		}
-
-		os.Exit(1)
-	}
+func run(ctx context.Context, _ *sync.WaitGroup) error {
+	return args.Execute(ctx)
 }
