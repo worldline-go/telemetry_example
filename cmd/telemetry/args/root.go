@@ -32,7 +32,7 @@ var rootCmd = &cobra.Command{
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// appname and version
-		log.WithLevel(zerolog.NoLevel).Msgf("%s [%s]", strings.ToTitle(config.AppName), config.AppVersion)
+		log.WithLevel(zerolog.NoLevel).Msgf("%s [%s]", strings.ToTitle(config.ServiceName), config.ServiceVersion)
 
 		ow := make(map[string]config.OverrideHold)
 		ow["host"] = config.OverrideHold{Memory: &config.Application.Host, Value: config.Application.Host}

@@ -70,7 +70,9 @@ func NewRouter(rs RouterSettings) *Router {
 	// add otel tracing
 	e.Use(otelecho.Middleware(config.LoadConfig.AppName, otelecho.WithTracerProvider(otel.GetTracerProvider())))
 
-	docs.SetVersion()
+	if err := docs.Info(); err != nil {
+		log.Warn().Err(err).Msg("failed to set swagger info")
+	}
 
 	router := &Router{
 		echo: e,
