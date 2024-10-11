@@ -1,5 +1,5 @@
 FROM scratch
 
-COPY telemetry /telemetry
+COPY /dist/telemetry /telemetry
 
 ENTRYPOINT [ "/telemetry" ]

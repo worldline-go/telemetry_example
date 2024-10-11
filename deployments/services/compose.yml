@@ -1,0 +1,37 @@
+version: '3'
+
+x-otel-environment: &otel-environment
+  OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+
+services:
+  service-1:
+    image: telemetry:test
+    ports:
+      - "8080:8080"
+    environment:
+      SERVICE_NAME: "service-1"
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+      OTEL_RESOURCE_ATTRIBUTES: service.name=service-1
+    volumes:
+      - ./config/service-1.yaml:/service-1.yaml
+  service-2:
+    image: telemetry:test
+    environment:
+      SERVICE_NAME: "service-2"
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+      OTEL_RESOURCE_ATTRIBUTES: service.name=service-2
+    volumes:
+      - ./config/service-2.yaml:/service-2.yaml
+  # service-3:
+  #   image: telemetry:test
+  # service-4:
+  #   image: telemetry:test
+  # service-5:
+  #   image: telemetry:test
+  # service-6:
+  #   image: telemetry:test
+
+networks:
+  default:
+    name: telemetry
+    external: true

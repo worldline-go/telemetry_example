@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"context"
@@ -9,9 +9,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	swag "github.com/worldline-go/echo-swagger"
+	echoSwagger "github.com/swaggo/echo-swagger"
+	"github.com/worldline-go/logz/logecho"
 	"github.com/worldline-go/tell/metric/metricecho"
 	"github.com/ziflex/lecho/v3"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
@@ -19,16 +19,14 @@ import (
 
 	"github.com/worldline-go/telemetry_example/docs"
 	"github.com/worldline-go/telemetry_example/internal/config"
-	"github.com/worldline-go/telemetry_example/internal/hold"
-	"github.com/worldline-go/telemetry_example/internal/http/handler"
-	"github.com/worldline-go/telemetry_example/internal/http/middle"
+	"github.com/worldline-go/telemetry_example/internal/server/handler"
 )
 
 var shutdownTimeout = 5 * time.Second
 
 type RouterSettings struct {
-	// Host like 0.0.0.0:8080
-	Host string
+	// Addr like 0.0.0.0:8080
+	Addr string
 	// BasePath for serving
 	BasePath string
 	// ShutdownTimeout using in shutdown server default is 5 second.
@@ -36,8 +34,8 @@ type RouterSettings struct {
 }
 
 func (rs RouterSettings) SetDefaults() RouterSettings {
-	if rs.Host == "" {
-		rs.Host = "0.0.0.0:8080"
+	if rs.Addr == "" {
+		rs.Addr = "0.0.0.0:8080"
 	}
 
 	if rs.ShutdownTimeout == 0 {
@@ -48,29 +46,32 @@ func (rs RouterSettings) SetDefaults() RouterSettings {
 }
 
 type Router struct {
-	echo    *echo.Echo
-	rs      RouterSettings
-	counter hold.Counter
+	echo *echo.Echo
+	rs   RouterSettings
 }
 
-func NewRouter(rs RouterSettings) *Router {
+func NewRouter(rs RouterSettings, handler *handler.Handler) *Router {
 	e := echo.New()
 	e.HideBanner = true
 
 	e.Logger = lecho.From(log.Logger)
 	// e.Validator = util.NewValidator()
 
-	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
-	e.Use(middle.Logger(log.Logger, zerolog.InfoLevel))
+	e.Use(
+		middleware.Recover(),
+		middleware.CORS(),
+		middleware.RequestID(),
+		middleware.RequestLoggerWithConfig(logecho.RequestLoggerConfig()),
+		logecho.ZerologLogger(),
+	)
 
 	// add echo metrics
 	e.Use(metricecho.HTTPMetrics(nil))
 
 	// add otel tracing
-	e.Use(otelecho.Middleware(config.LoadConfig.AppName, otelecho.WithTracerProvider(otel.GetTracerProvider())))
+	e.Use(otelecho.Middleware(config.ServiceName, otelecho.WithTracerProvider(otel.GetTracerProvider())))
 
-	if err := docs.Info(); err != nil {
+	if err := docs.Info(path.Join("/api/v1/", rs.BasePath)); err != nil {
 		log.Warn().Err(err).Msg("failed to set swagger info")
 	}
 
@@ -79,7 +80,7 @@ func NewRouter(rs RouterSettings) *Router {
 		rs:   rs.SetDefaults(),
 	}
 
-	router.Register(rs.BasePath, nil)
+	router.Register(rs.BasePath, nil, handler)
 
 	return router
 }
@@ -90,13 +91,18 @@ func NewRouter(rs RouterSettings) *Router {
 // @version 1.0
 // @description telemetry example project
 //
-// @contact.name DeepCore Team
-// @contact.email @FINOPS @DEEPCORE
+// @contact.name @FINOPS
+// @contact.email @FINOPS
 //
 // @host
 // @BasePath /api/v1
-func (r *Router) Register(basePath string, middlewares []echo.MiddlewareFunc) {
-	z := r.echo.Group("")
+func (r *Router) Register(basePath string, middlewares []echo.MiddlewareFunc, h *handler.Handler) {
+	var z interface {
+		GET(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+		Group(prefix string, m ...echo.MiddlewareFunc) *echo.Group
+	}
+
+	z = r.echo
 	basement := ""
 
 	if basePath != "" {
@@ -104,27 +110,14 @@ func (r *Router) Register(basePath string, middlewares []echo.MiddlewareFunc) {
 		z = r.echo.Group(basement)
 	}
 
-	// if r.rs.PrometheusCollector != nil {
-	// log.Info().Msgf("metrics on %s", path.Join(basement, "/metrics"))
-
-	// registry := prometheus.NewRegistry()
-	// registry.MustRegister(r.rs.PrometheusCollector)
-
-	// z.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{})))
-	// }
-
+	z.GET("/api/swagger/*", echoSwagger.WrapHandler)
 	v1 := z.Group("/api/v1")
-	h := handler.Handlers{
-		Counter: &r.counter,
-	}
 
 	h.Register(v1, middlewares)
-
-	v1.GET("/swagger/*", swag.WrapHandler)
 }
 
 func (r *Router) Start() error {
-	if err := r.echo.Start(r.rs.Host); !errors.Is(err, http.ErrServerClosed) {
+	if err := r.echo.Start(r.rs.Addr); !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 

@@ -1,0 +1,3 @@
+api:
+  service-2:
+    base_url: "http://service-2:8080"

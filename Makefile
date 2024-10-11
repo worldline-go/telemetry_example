@@ -4,31 +4,26 @@ PKG_MAIN = cmd/$(PROJECT)/main.go
 VERSION := $(or $(IMAGE_TAG),$(shell git describe --tags --first-parent --match "v*" 2> /dev/null || echo v0.0.0))
 LOCAL_BIN_DIR := $(PWD)/bin
 
-DOCKER_COMPOSE := docker compose --project-name=$(PROJECT) --file=deployments/compose/compose.yml
-DOCKER_SWARM := docker stack deploy --prune --with-registry-auth -c deployments/compose/compose.yml
-
-## swaggo configuration
-SWAG_VERSION := $(shell grep github.com/swaggo/swag go.mod | xargs echo | cut -d" " -f2)
-
-## golangci configuration
-GOLANGCI_CONFIG_URL   := https://gitlab.test.igdcs.com/finops/devops/cicd/runner/raw/master/.golangci.yml
-GOLANGCI_LINT_VERSION := v1.52.2
-
-DOCKER_IMAGE_NAME := telemetry:dev
+DOCKER_IMAGE_NAME := telemetry:test
 
 .DEFAULT_GOAL := help
 
 .PHONY: build
-build: docs ## Build project
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w -X $(PKG)/config.AppVersion=$(VERSION)" -o $(PROJECT) $(PKG_MAIN)
+build: ## Build project
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w -X $(PKG)/config.AppVersion=$(VERSION)" -o dist/$(PROJECT) $(PKG_MAIN)
 
-.PHONY: docker
-docker: build
-	tar -cf - deployments/docker/scratch.Dockerfile telemetry | docker build -t $(DOCKER_IMAGE_NAME) -f deployments/docker/scratch.Dockerfile -
+.PHONY: build-container
+build-container: build ## Build project and docker image
+	tar -cf - deployments/docker/scratch.Dockerfile dist/telemetry | docker build -t $(DOCKER_IMAGE_NAME) -f deployments/docker/scratch.Dockerfile -
 
 .PHONY: docs
 docs: ## Generate swag documentation
-	@swag init -g internal/http/server.go
+	@swag init -g internal/server/server.go
+
+.PHONY: install
+install: ## Install tools for development
+	go install github.com/swaggo/swag/cmd/swag@latest
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ~/bin v1.61.0
 
 .PHONY: lint
 lint: ## Lint Go files
@@ -58,29 +53,19 @@ test-env: env data ## Run unit tests and integration tests
 
 .PHONY: env
 env: ## Initializes a dev environment with dev dependencies
-	@$(DOCKER_COMPOSE) up -d
+	docker compose --project-name=telemetry --file=deployments/compose/compose.yml up -d --remove-orphans
 
-.PHONY: env-ps
-env-ps: ## Check dev env
-	@$(DOCKER_COMPOSE) ps
+.PHONY: env-services
+env-services: ## Initializes a services environment
+	docker compose --project-name=telemetry-services --file=deployments/services/compose.yml up -d --remove-orphans
 
 .PHONY: env-destroy
 env-destroy: ## Stops the dependencies in the dev environment and destroys the data
-	@$(DOCKER_COMPOSE) down --volumes
+	docker compose --project-name=telemetry down --volumes
 
-.PHONY: env-swarm
-env-swarm: ## Initializes a dev envrionment in swarm
-	@$(DOCKER_SWARM) $(PROJECT)
-
-.PHONY: env-swarm-ps
-env-swarm-ps:
-	docker stack ps $(PROJECT)
-
-.PHONY: env-swarm-destroy
-env-swarm-destroy:
-	docker stack rm $(PROJECT)
-	# wait for delete complete
-	@until [[ -z "$(shell docker stack ps $(PROJECT) -q 2>/dev/null)" ]]; do sleep 1; done
+.PHONY: env-services-destroy
+env-services-destroy: ## Stops the dependencies in the services environment and destroys the data
+	docker compose --project-name=telemetry-services down --volumes
 
 # CONFIG_FILE=./configs/local.yml go run $(PKG_MAIN)
 .PHONY: run
@@ -133,18 +118,6 @@ postgres: ## Initialize a postgresql
 .PHONY: postgres-destroy
 postgres-destroy: ## Destroy opened postgres
 	docker container rm -f postgres
-
-.PHONY: kafka-producer
-kafka-producer: ## Kafka console for producer
-	@$(DOCKER_COMPOSE) exec kafka kafka-console-producer.sh --bootstrap-server localhost:9092 --topic default-topic
-
-.PHONY: kafka-consumer
-kafka-consumer: ## Kafka console for consumer
-	@$(DOCKER_COMPOSE) exec kafka kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic default-topic --from-beginning
-
-.PHONY: kafka
-kafka: ## Kafka container /bin/bash
-	@$(DOCKER_COMPOSE) exec kafka /bin/bash
 
 .PHONY: help
 help: ## Display this help screen

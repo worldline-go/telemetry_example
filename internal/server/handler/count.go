@@ -6,23 +6,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/worldline-go/telemetry_example/internal/hold"
-	"github.com/worldline-go/telemetry_example/internal/msg"
+	"github.com/worldline-go/telemetry_example/internal/model"
 	"github.com/worldline-go/telemetry_example/internal/telemetry"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
-
-type Handlers struct {
-	Counter *hold.Counter
-}
-
-func (h *Handlers) Register(group *echo.Group, middlewares []echo.MiddlewareFunc) {
-	group.GET("/count", h.GetCount, middlewares...)
-	group.POST("/count", h.PostCount, middlewares...)
-}
 
 // GetCount
 //
@@ -31,9 +21,9 @@ func (h *Handlers) Register(group *echo.Group, middlewares []echo.MiddlewareFunc
 // @Produce     json
 // @Router      /count [get]
 // @Security    ApiKeyAuth
-// @Success     200 {object} msg.WebApiSuccess{}
-// @Failure     400 {object} msg.WebApiError{}
-func (h *Handlers) GetCount(c echo.Context) error {
+// @Success     200 {object} model.Message{}
+// @Failure     400 {object} model.Message{}
+func (h *Handler) GetCount(c echo.Context) error {
 	_, span := otel.GetTracerProvider().Tracer(c.Path()).Start(c.Request().Context(), "GetCount")
 	defer span.End()
 
@@ -43,7 +33,7 @@ func (h *Handlers) GetCount(c echo.Context) error {
 
 	telemetry.GlobalMeter.UpDownCounter.Add(c.Request().Context(), 1, metric.WithAttributes(telemetry.GlobalAttr...))
 
-	return c.JSON(http.StatusOK, msg.API{
+	return c.JSON(http.StatusOK, model.Message{
 		Data: h.Counter.Get(),
 	})
 }
@@ -56,9 +46,9 @@ func (h *Handlers) GetCount(c echo.Context) error {
 // @Router      /count [post]
 // @Security    ApiKeyAuth
 // @Param       count query int false "Count Value"
-// @Success     200 {object} msg.WebApiSuccess{}
-// @Failure     400 {object} msg.WebApiError{}
-func (h *Handlers) PostCount(c echo.Context) error {
+// @Success     200 {object} model.Message{}
+// @Failure     400 {object} model.Message{}
+func (h *Handler) PostCount(c echo.Context) error {
 	_, span := otel.GetTracerProvider().Tracer(c.Path()).Start(c.Request().Context(), "PostCount")
 	defer span.End()
 
@@ -70,8 +60,8 @@ func (h *Handlers) PostCount(c echo.Context) error {
 
 		countInt, err = strconv.ParseInt(count, 10, 64)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, msg.API{
-				Err: err.Error(),
+			return c.JSON(http.StatusBadRequest, model.Message{
+				Message: err.Error(),
 			})
 		}
 	}
@@ -86,7 +76,7 @@ func (h *Handlers) PostCount(c echo.Context) error {
 
 	telemetry.GlobalMeter.UpDownCounter.Add(c.Request().Context(), 1, metric.WithAttributes(telemetry.GlobalAttr...))
 
-	return c.JSON(http.StatusOK, msg.API{
+	return c.JSON(http.StatusOK, model.Message{
 		Data: newResult,
 	})
 }

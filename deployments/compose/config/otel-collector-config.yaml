@@ -2,25 +2,32 @@ receivers:
   otlp:
     protocols:
       grpc:
+        endpoint: 0.0.0.0:4317
 
 exporters:
   prometheus:
-    endpoint: "0.0.0.0:8889"
+    endpoint: 0.0.0.0:8889
     # const_labels:
     #   label1: value1
     send_timestamps: true
     metric_expiration: 1m
 
-  logging:
-
-  zipkin:
-    endpoint: "http://zipkin:9411/api/v2/spans"
-    format: proto
-
-  jaeger:
-    endpoint: jaeger:14250
+  otlp:
+    endpoint: tempo:4317
     tls:
       insecure: true
+
+  prometheus/servicegraph:
+    endpoint: 0.0.0.0:8890
+
+connectors:
+  servicegraph:
+    # latency_histogram_buckets: [100ms, 250ms, 1s, 5s, 10s]
+    # dimensions:
+    #   - service.name
+    # store:
+    #   ttl: 1s
+    #   max_items: 10
 
 processors:
   batch:
@@ -38,8 +45,11 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [zipkin, jaeger]
+      exporters: [otlp, servicegraph]
     metrics:
       receivers: [otlp]
       processors: [batch]
       exporters: [prometheus]
+    metrics/servicegraph:
+      receivers: [servicegraph]
+      exporters: [prometheus/servicegraph]

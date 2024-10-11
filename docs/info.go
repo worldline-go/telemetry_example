@@ -7,8 +7,9 @@ import (
 	"github.com/worldline-go/telemetry_example/internal/config"
 )
 
-func Info() error {
+func Info(basePath string) error {
 	return swagger.SetInfo(
+		swagger.WithBasePath(basePath),
 		swagger.WithTitle(config.ServiceName),
 		swagger.WithVersion(config.ServiceVersion),
 	)

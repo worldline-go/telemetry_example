@@ -24,10 +24,6 @@ type Meter struct {
 	SendGaugeCounter metric.Int64ObservableGauge
 }
 
-func AddGlobalAttr(v ...attribute.KeyValue) {
-	GlobalAttr = append(GlobalAttr, v...)
-}
-
 func SetGlobalMeter() error {
 	mp := otel.GetMeterProvider()
 
@@ -66,5 +62,6 @@ func SetGlobalMeter() error {
 	}
 
 	GlobalMeter = m
+
 	return nil
 }

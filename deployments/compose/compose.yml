@@ -17,59 +17,48 @@ services:
     restart: unless-stopped
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.45.0
-    ports:
-      - "9091:8080"
-    # network_mode: host
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    devices:
-      - /dev/kmsg
-    restart: unless-stopped
   grafana:
     image: grafana/grafana-oss:latest
     ports:
       - "3000:3000"
     # volumes:
     #   - grafana-data:/var/lib/grafana
+    volumes:
+      - ./config/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
     restart: unless-stopped
-  jaeger:
-    image: jaegertracing/all-in-one:1.38
-    ports:
-      # - 6831:6831/udp
-      # - 6832:6832/udp
-      # - 5778:5778
-      - 16686:16686
-      # - 4317:4317
-      # - 4318:4318
-      # - 14250:14250
-      # - 14268:14268
-      # - 14269:14269
-      # - 9411:9411
     environment:
-      - COLLECTOR_OTLP_ENABLED=true
-      - COLLECTOR_ZIPKIN_HOST_PORT=:9411 
-  zipkin:
-    image: openzipkin/zipkin:2.23
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./config/tempo.yaml:/etc/tempo.yaml
+      # - ./tempo-data:/var/tempo
     ports:
-      - "9411:9411"
+      # - "14268"  # jaeger ingest
+      - "3200:3200"   # tempo
+      # - "4317"  # otlp grpc
+      # - "4318"  # otlp http
+      # - "9411"   # zipkin
   # Collector
   otel-collector:
-    image: otel/opentelemetry-collector
+    image: otel/opentelemetry-collector-contrib:latest
     command:
       - "--config=/etc/otel-collector-config.yaml"
     volumes:
       - ./config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
-      - "1888:1888"   # pprof extension
-      - "8888:8888"   # Prometheus metrics exposed by the collector
+      # - "1888:1888"   # pprof extension
+      # - "8888:8888"   # Prometheus metrics exposed by the collector
       - "8889:8889"   # Prometheus exporter metrics
-      - "13133:13133" # health_check extension
+      - "8890:8890"   # Prometheus exporter metrics
+      # - "13133:13133" # health_check extension
       - "4317:4317"   # OTLP gRPC receiver
-      - "4318:4318"   # OTLP http receiver
-      - "55679:55679" # zpages extension
+      # - "4318:4318"   # OTLP http receiver
+      # - "55679:55679" # zpages extension
+
+networks:
+  default:
+    name: telemetry
