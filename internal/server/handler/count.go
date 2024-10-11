@@ -7,7 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/worldline-go/telemetry_example/internal/hold"
-	"github.com/worldline-go/telemetry_example/internal/msg"
+	"github.com/worldline-go/telemetry_example/internal/model"
 	"github.com/worldline-go/telemetry_example/internal/telemetry"
 
 	"go.opentelemetry.io/otel"
@@ -31,8 +31,8 @@ func (h *Handlers) Register(group *echo.Group, middlewares []echo.MiddlewareFunc
 // @Produce     json
 // @Router      /count [get]
 // @Security    ApiKeyAuth
-// @Success     200 {object} msg.WebApiSuccess{}
-// @Failure     400 {object} msg.WebApiError{}
+// @Success     200 {object} model.WebApiSuccess{}
+// @Failure     400 {object} model.WebApiError{}
 func (h *Handlers) GetCount(c echo.Context) error {
 	_, span := otel.GetTracerProvider().Tracer(c.Path()).Start(c.Request().Context(), "GetCount")
 	defer span.End()
@@ -43,7 +43,7 @@ func (h *Handlers) GetCount(c echo.Context) error {
 
 	telemetry.GlobalMeter.UpDownCounter.Add(c.Request().Context(), 1, metric.WithAttributes(telemetry.GlobalAttr...))
 
-	return c.JSON(http.StatusOK, msg.API{
+	return c.JSON(http.StatusOK, model.API{
 		Data: h.Counter.Get(),
 	})
 }
@@ -56,8 +56,8 @@ func (h *Handlers) GetCount(c echo.Context) error {
 // @Router      /count [post]
 // @Security    ApiKeyAuth
 // @Param       count query int false "Count Value"
-// @Success     200 {object} msg.WebApiSuccess{}
-// @Failure     400 {object} msg.WebApiError{}
+// @Success     200 {object} model.WebApiSuccess{}
+// @Failure     400 {object} model.WebApiError{}
 func (h *Handlers) PostCount(c echo.Context) error {
 	_, span := otel.GetTracerProvider().Tracer(c.Path()).Start(c.Request().Context(), "PostCount")
 	defer span.End()
@@ -70,7 +70,7 @@ func (h *Handlers) PostCount(c echo.Context) error {
 
 		countInt, err = strconv.ParseInt(count, 10, 64)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, msg.API{
+			return c.JSON(http.StatusBadRequest, model.API{
 				Err: err.Error(),
 			})
 		}
@@ -86,7 +86,7 @@ func (h *Handlers) PostCount(c echo.Context) error {
 
 	telemetry.GlobalMeter.UpDownCounter.Add(c.Request().Context(), 1, metric.WithAttributes(telemetry.GlobalAttr...))
 
-	return c.JSON(http.StatusOK, msg.API{
+	return c.JSON(http.StatusOK, model.API{
 		Data: newResult,
 	})
 }

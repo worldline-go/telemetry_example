@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"sync"
 
 	"github.com/worldline-go/initializer"
 	"github.com/worldline-go/logz"
@@ -17,6 +16,6 @@ func main() {
 	)
 }
 
-func run(ctx context.Context, _ *sync.WaitGroup) error {
+func run(ctx context.Context) error {
 	return args.Execute(ctx)
 }

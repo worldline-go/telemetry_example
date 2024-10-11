@@ -1,7 +1,7 @@
 //go:build ignore
 // +build ignore
 
-package msg
+package model
 
 type WebApiError struct {
 	Err string `json:"error,omitempty" example:"problem explanation"`

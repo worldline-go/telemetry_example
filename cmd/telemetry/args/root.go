@@ -3,6 +3,7 @@ package args
 import (
 	"context"
 	"fmt"
+	"net"
 	"strings"
 
 	"github.com/rs/zerolog"
@@ -13,7 +14,7 @@ import (
 	"github.com/worldline-go/tell"
 
 	"github.com/worldline-go/telemetry_example/internal/config"
-	"github.com/worldline-go/telemetry_example/internal/http"
+	"github.com/worldline-go/telemetry_example/internal/server"
 	"github.com/worldline-go/telemetry_example/internal/telemetry"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -59,10 +60,9 @@ func RootCmdFlags() {
 
 func runRoot(ctx context.Context) (err error) {
 	// get router
-	router := http.NewRouter(http.RouterSettings{
-		Host: config.Application.Host + ":" + config.Application.Port,
+	router := server.NewRouter(server.RouterSettings{
+		Host: net.JoinHostPort(config.Application.Host, config.Application.Port),
 	})
-	initializer.Shutdown.Add(router.Stop)
 
 	collector, err := tell.New(ctx, config.Application.Telemetry)
 	if err != nil {
@@ -75,9 +75,7 @@ func runRoot(ctx context.Context) (err error) {
 		return fmt.Errorf("failed to set metric; %w", err)
 	}
 
-	// if err := runtime.Start(); err != nil {
-	// 	return fmt.Errorf("failed to start runtime metrics; %w", err)
-	// }
+	initializer.ShutdownAdd(router.Stop, "http-server")
 
 	// run server
 	return router.Start()

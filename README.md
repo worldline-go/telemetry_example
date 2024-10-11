@@ -7,9 +7,9 @@ OpenTelemetry good to send send trace and metric data to different platform.
 | grafana        | http://localhost:3000                 |
 | jaeger         | http://localhost:16686                |
 | zipkin         | http://localhost:9411                 |
-| cadvisor       | http://localhost:9091                 |
 | prometheus     | http://localhost:9090                 |
 | otel-collector | http://localhost:8889/metrics         |
+| tempo          | http://localhost:3200                 |
 | example        | http://localhost:8080/api/v1/swagger/ |
 
 ## Quick Start
@@ -23,7 +23,7 @@ make env
 After that run this example program, run command set the otel env variables to open telemetry connection in code.
 
 ```sh
-make docs run
+make run
 ```
 
 Run without opentelemetry

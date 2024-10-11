@@ -58,7 +58,7 @@ test-env: env data ## Run unit tests and integration tests
 
 .PHONY: env
 env: ## Initializes a dev environment with dev dependencies
-	@$(DOCKER_COMPOSE) up -d
+	@$(DOCKER_COMPOSE) up -d --remove-orphans
 
 .PHONY: env-ps
 env-ps: ## Check dev env

@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"context"
@@ -9,9 +9,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	swag "github.com/worldline-go/echo-swagger"
+	echoSwagger "github.com/swaggo/echo-swagger"
+	"github.com/worldline-go/logz/logecho"
 	"github.com/worldline-go/tell/metric/metricecho"
 	"github.com/ziflex/lecho/v3"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
@@ -20,8 +20,7 @@ import (
 	"github.com/worldline-go/telemetry_example/docs"
 	"github.com/worldline-go/telemetry_example/internal/config"
 	"github.com/worldline-go/telemetry_example/internal/hold"
-	"github.com/worldline-go/telemetry_example/internal/http/handler"
-	"github.com/worldline-go/telemetry_example/internal/http/middle"
+	"github.com/worldline-go/telemetry_example/internal/server/handler"
 )
 
 var shutdownTimeout = 5 * time.Second
@@ -60,9 +59,13 @@ func NewRouter(rs RouterSettings) *Router {
 	e.Logger = lecho.From(log.Logger)
 	// e.Validator = util.NewValidator()
 
-	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
-	e.Use(middle.Logger(log.Logger, zerolog.InfoLevel))
+	e.Use(
+		middleware.Recover(),
+		middleware.CORS(),
+		middleware.RequestID(),
+		middleware.RequestLoggerWithConfig(logecho.RequestLoggerConfig()),
+		logecho.ZerologLogger(),
+	)
 
 	// add echo metrics
 	e.Use(metricecho.HTTPMetrics(nil))
@@ -90,8 +93,8 @@ func NewRouter(rs RouterSettings) *Router {
 // @version 1.0
 // @description telemetry example project
 //
-// @contact.name DeepCore Team
-// @contact.email @FINOPS @DEEPCORE
+// @contact.name @FINOPS
+// @contact.email @FINOPS
 //
 // @host
 // @BasePath /api/v1
@@ -104,15 +107,6 @@ func (r *Router) Register(basePath string, middlewares []echo.MiddlewareFunc) {
 		z = r.echo.Group(basement)
 	}
 
-	// if r.rs.PrometheusCollector != nil {
-	// log.Info().Msgf("metrics on %s", path.Join(basement, "/metrics"))
-
-	// registry := prometheus.NewRegistry()
-	// registry.MustRegister(r.rs.PrometheusCollector)
-
-	// z.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{})))
-	// }
-
 	v1 := z.Group("/api/v1")
 	h := handler.Handlers{
 		Counter: &r.counter,
@@ -120,7 +114,7 @@ func (r *Router) Register(basePath string, middlewares []echo.MiddlewareFunc) {
 
 	h.Register(v1, middlewares)
 
-	v1.GET("/swagger/*", swag.WrapHandler)
+	v1.GET("/swagger/*", echoSwagger.WrapHandler)
 }
 
 func (r *Router) Start() error {

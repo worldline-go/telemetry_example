@@ -1,4 +1,4 @@
-package msg
+package model
 
 type Meta struct {
 	Limit  int `json:"limit"`

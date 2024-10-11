@@ -2,6 +2,7 @@ receivers:
   otlp:
     protocols:
       grpc:
+        endpoint: 0.0.0.0:4317
 
 exporters:
   prometheus:
@@ -11,14 +12,8 @@ exporters:
     send_timestamps: true
     metric_expiration: 1m
 
-  logging:
-
-  zipkin:
-    endpoint: "http://zipkin:9411/api/v2/spans"
-    format: proto
-
-  jaeger:
-    endpoint: jaeger:14250
+  otlp:
+    endpoint: tempo:4317
     tls:
       insecure: true
 
@@ -38,7 +33,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [zipkin, jaeger]
+      exporters: [otlp]
     metrics:
       receivers: [otlp]
       processors: [batch]
