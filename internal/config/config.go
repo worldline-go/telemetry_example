@@ -48,7 +48,8 @@ var Application = struct {
 	// KafkaTopic for producing example
 	KafkaTopic string `cfg:"kafka_topic"`
 
-	OtherAPI klient.Config `cfg:"other_api"`
+	// API for talk with http calls
+	API map[string]klient.Config `cfg:"api"`
 
 	Telemetry tell.Config
 }{}
@@ -60,7 +61,7 @@ func Load(ctx context.Context, visit func(fn func(*pflag.Flag)), overrideValues 
 		&loader.Env{},
 	}
 
-	if err := igconfig.LoadWithLoadersWithContext(ctx, "", &LoadConfig, loaders...); err != nil {
+	if err := igconfig.LoadWithLoadersWithContext(ctx, ServiceName, &LoadConfig, loaders...); err != nil {
 		return fmt.Errorf("unable to load prefix settings: %v", err)
 	}
 
