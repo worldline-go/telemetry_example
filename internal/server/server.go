@@ -15,7 +15,6 @@ import (
 	"github.com/worldline-go/tell/metric/metricecho"
 	"github.com/ziflex/lecho/v3"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
-	"go.opentelemetry.io/otel"
 
 	"github.com/worldline-go/telemetry_example/docs"
 	"github.com/worldline-go/telemetry_example/internal/config"
@@ -69,7 +68,7 @@ func NewRouter(rs RouterSettings, handler *handler.Handler) *Router {
 	e.Use(metricecho.HTTPMetrics(nil))
 
 	// add otel tracing
-	e.Use(otelecho.Middleware(config.ServiceName, otelecho.WithTracerProvider(otel.GetTracerProvider())))
+	e.Use(otelecho.Middleware(config.ServiceName))
 
 	if err := docs.Info(path.Join("/api/v1/", rs.BasePath)); err != nil {
 		log.Warn().Err(err).Msg("failed to set swagger info")
