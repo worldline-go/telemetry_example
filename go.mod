@@ -3,24 +3,30 @@ module github.com/worldline-go/telemetry_example
 go 1.22
 
 require (
+	github.com/doug-martin/goqu/v9 v9.19.0
+	github.com/jackc/pgx/v5 v5.7.1
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.6.1
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.2
+	github.com/twmb/franz-go/plugin/kotel v1.5.0
 	github.com/worldline-go/igconfig v0.3.0
+	github.com/worldline-go/igmigrator v1.1.1
 	github.com/worldline-go/initializer v0.5.0
 	github.com/worldline-go/klient v0.8.4
 	github.com/worldline-go/logz v0.5.1
 	github.com/worldline-go/swagger v1.0.0
 	github.com/worldline-go/tell v0.5.7
 	github.com/worldline-go/tell/metric/metricecho v0.5.7
-	github.com/worldline-go/wkafka v0.3.3
+	github.com/worldline-go/wkafka v0.3.4
 	github.com/ziflex/lecho/v3 v3.5.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.56.0
 	go.opentelemetry.io/otel v1.31.0
 	go.opentelemetry.io/otel/metric v1.31.0
 	go.opentelemetry.io/otel/trace v1.31.0
+	golang.org/x/sync v0.8.0
 )
 
 require (
@@ -59,6 +65,8 @@ require (
 	github.com/hashicorp/serf v0.10.1 // indirect
 	github.com/hashicorp/vault/api v1.14.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
@@ -72,8 +80,8 @@ require (
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
-	github.com/twmb/franz-go v1.17.0 // indirect
-	github.com/twmb/franz-go/pkg/kadm v1.12.0 // indirect
+	github.com/twmb/franz-go v1.17.1 // indirect
+	github.com/twmb/franz-go/pkg/kadm v1.13.0 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.8.0 // indirect
 	github.com/twmb/tlscfg v1.2.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
@@ -90,7 +98,6 @@ require (
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/net v0.30.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/time v0.7.0 // indirect

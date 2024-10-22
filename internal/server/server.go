@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"path"
+	"sync"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -121,6 +122,19 @@ func (r *Router) Start() error {
 	}
 
 	return nil
+}
+
+func (r *Router) StopWithContext(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		<-ctx.Done()
+
+		if err := r.Stop(); err != nil {
+			log.Error().Err(err).Msg("failed to stop service")
+		}
+	}()
 }
 
 func (r *Router) Stop() error {

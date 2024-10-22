@@ -9,6 +9,7 @@ import (
 	"github.com/worldline-go/igconfig/loader"
 	"github.com/worldline-go/klient"
 	"github.com/worldline-go/logz"
+	"github.com/worldline-go/telemetry_example/internal/database/dbutil"
 	"github.com/worldline-go/tell"
 	"github.com/worldline-go/wkafka"
 )
@@ -36,6 +37,7 @@ var Application = struct {
 
 	EnableKafkaConsumer bool `cfg:"enable_kafka_consumer"`
 	EnableKafkaProducer bool `cfg:"enable_kafka_producer"`
+	EnableDatabase      bool `cfg:"enable_database"`
 
 	KafkaConfig wkafka.Config `cfg:"kafka_config"`
 	// KafkaConsumer for consuming example
@@ -47,7 +49,24 @@ var Application = struct {
 	API map[string]klient.Config `cfg:"api"`
 
 	Telemetry tell.Config
+
+	Database Database `cfg:"database"`
 }{}
+
+type Database struct {
+	DBDatasource string `cfg:"db_datasource" log:"false"`
+	DBType       string `cfg:"db_type"       default:"pgx"`
+	DBSchema     string `cfg:"db_schema"     default:"public"`
+
+	Migrate Migrate `cfg:"migrate"`
+}
+
+type Migrate struct {
+	DBDatasource string `cfg:"db_datasource" log:"false"`
+	DBType       string `cfg:"db_type"       default:"pgx"`
+	DBSchema     string `cfg:"db_schema"     default:"public"`
+	DBTable      string `cfg:"db_table"      default:"migration"`
+}
 
 func Load(ctx context.Context) error {
 	loaders := []loader.Loader{
@@ -63,6 +82,19 @@ func Load(ctx context.Context) error {
 	// set log again to get changes
 	if err := logz.SetLogLevel(Application.LogLevel); err != nil {
 		return err //nolint:wrapcheck // no need
+	}
+
+	if Application.EnableDatabase {
+		dbDatasource, err := dbutil.SetDBSchema(Application.Database.DBDatasource, Application.Database.DBSchema)
+		if err != nil {
+			return fmt.Errorf("failed to set db schema: %w", err)
+		}
+
+		Application.Database.DBDatasource = dbDatasource
+
+		if Application.Database.Migrate.DBDatasource == "" {
+			Application.Database.Migrate.DBDatasource = Application.Database.DBDatasource
+		}
 	}
 
 	// print loaded object

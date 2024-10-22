@@ -27,7 +27,7 @@ import (
 // @Failure     400 {object} model.Message{}
 func (h *Handler) Call(c echo.Context) error {
 	tracer := otel.Tracer(c.Path())
-	ctx, span := tracer.Start(c.Request().Context(), "call", trace.WithSpanKind(trace.SpanKindServer))
+	ctx, span := tracer.Start(c.Request().Context(), "call")
 	defer span.End()
 
 	service := c.Param("service")
@@ -106,7 +106,7 @@ func (h *Handler) Call(c echo.Context) error {
 // @Success     200 {object} model.Message{}
 func (h *Handler) Message(c echo.Context) error {
 	log.Info().Msgf("headers: %v", c.Request().Header)
-	_, span := otel.GetTracerProvider().Tracer(c.Path()).Start(c.Request().Context(), "message", trace.WithSpanKind(trace.SpanKindServer))
+	_, span := otel.Tracer(c.Path()).Start(c.Request().Context(), "message")
 	defer span.End()
 
 	return c.Stream(http.StatusOK, "application/json", c.Request().Body)
