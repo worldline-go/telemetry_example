@@ -14,7 +14,7 @@ build: ## Build project
 
 .PHONY: build-container
 build-container: build ## Build project and docker image
-	tar -cf - deployments/docker/scratch.Dockerfile dist/telemetry | docker build -t $(DOCKER_IMAGE_NAME) -f deployments/docker/scratch.Dockerfile -
+	tar -cf - deployments/docker/scratch.Dockerfile dist/telemetry migrations | docker build -t $(DOCKER_IMAGE_NAME) -f deployments/docker/scratch.Dockerfile -
 
 .PHONY: docs
 docs: ## Generate swag documentation

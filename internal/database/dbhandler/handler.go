@@ -19,17 +19,19 @@ var (
 )
 
 type Handler struct {
-	db *sqlx.DB
+	db *goqu.Database
 }
 
 func New(db *sqlx.DB) *Handler {
-	return &Handler{db: db}
+	dbGoqu := goqu.New("posgres", db)
+
+	return &Handler{db: dbGoqu}
 }
 
 func (h *Handler) GetProduct(ctx context.Context, name string) (*model.Product, error) {
 	var product model.Product
 
-	found, err := goqu.From("products").Where(goqu.C("name").Eq(name)).Executor().ScanStructContext(ctx, &product)
+	found, err := h.db.From("products").Where(goqu.C("name").Eq(name)).Executor().ScanStructContext(ctx, &product)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +46,7 @@ func (h *Handler) GetProduct(ctx context.Context, name string) (*model.Product, 
 func (h *Handler) AddNewProduct(ctx context.Context, name, description string) (int64, error) {
 	var id int64
 
-	_, err := goqu.Insert("products").Rows(
+	_, err := h.db.Insert("products").Rows(
 		goqu.Record{
 			"name":        name,
 			"description": description,

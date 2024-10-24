@@ -9,21 +9,27 @@ services:
     ports:
       - "8080:8080"
     environment:
+      <<: *otel-environment
       SERVICE_NAME: "service-1"
-      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
       OTEL_RESOURCE_ATTRIBUTES: service.name=service-1
     volumes:
       - ./config/service-1.yaml:/service-1.yaml
   service-2:
     image: telemetry:test
     environment:
+      <<: *otel-environment
       SERVICE_NAME: "service-2"
-      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
       OTEL_RESOURCE_ATTRIBUTES: service.name=service-2
     volumes:
       - ./config/service-2.yaml:/service-2.yaml
-  # service-3:
-  #   image: telemetry:test
+  service-3:
+    image: telemetry:test
+    environment:
+      <<: *otel-environment
+      SERVICE_NAME: "service-3"
+      OTEL_RESOURCE_ATTRIBUTES: service.name=service-3
+    volumes:
+      - ./config/service-3.yaml:/service-3.yaml
   # service-4:
   #   image: telemetry:test
   # service-5:

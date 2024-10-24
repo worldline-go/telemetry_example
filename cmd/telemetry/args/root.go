@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/cobra"
@@ -14,7 +15,6 @@ import (
 	"github.com/worldline-go/logz"
 	"github.com/worldline-go/tell"
 	"github.com/worldline-go/wkafka"
-	"go.opentelemetry.io/otel"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/worldline-go/telemetry_example/internal/config"
@@ -90,7 +90,9 @@ func runRoot(ctx context.Context) error {
 	// http clients
 	clients := make(map[string]*klient.Client)
 	for name := range config.Application.API {
-		client, err := config.Application.API[name].New()
+		client, err := config.Application.API[name].New(klient.WithHeaderAdd(http.Header{
+			"Content-Type": []string{"application/json"},
+		}))
 		if err != nil {
 			return fmt.Errorf("failed to create client [%s]; %w", name, err)
 		}
@@ -103,18 +105,14 @@ func runRoot(ctx context.Context) error {
 	var kafkaClient *wkafka.Client
 	var kafkaProducer *wkafka.Producer[*model.Product]
 	var kafkaTracer *kotel.Tracer
-	if config.Application.EnableKafkaConsumer && config.Application.EnableKafkaProducer {
-		// Create a new kotel tracer.
-		tracerOpts := []kotel.TracerOpt{
-			kotel.TracerProvider(otel.GetTracerProvider()),
-			kotel.TracerPropagator(otel.GetTextMapPropagator()),
-		}
-		kafkaTracer = kotel.NewTracer(tracerOpts...)
+	var kafkaOtel *kotel.Kotel
+	if config.Application.EnableKafkaConsumer || config.Application.EnableKafkaProducer {
+		kafkaTracer = kotel.NewTracer()
+		kafkaOtel = kotel.NewKotel(kotel.WithTracer(kafkaTracer))
 	}
 
 	switch {
 	case config.Application.EnableKafkaConsumer:
-		kafkaOtel := kotel.NewKotel(kotel.WithTracer(kafkaTracer))
 		kafkaClient, err = wkafka.New(ctx,
 			config.Application.KafkaConfig,
 			wkafka.WithConsumer(config.Application.KafkaConsumer),
@@ -125,7 +123,6 @@ func runRoot(ctx context.Context) error {
 			return fmt.Errorf("failed to create kafka client; %w", err)
 		}
 	case config.Application.EnableKafkaProducer:
-		kafkaOtel := kotel.NewKotel(kotel.WithTracer(kafkaTracer))
 		kafkaClient, err = wkafka.New(ctx,
 			config.Application.KafkaConfig,
 			wkafka.WithClientInfo(config.ServiceName, config.ServiceVersion),
@@ -155,7 +152,8 @@ func runRoot(ctx context.Context) error {
 	}
 
 	handlerKafka := kafka.Kafka{
-		DB: dbHandler,
+		DB:     dbHandler,
+		Tracer: kafkaTracer,
 	}
 
 	// //////////////////////////////////////////

@@ -21,11 +21,26 @@ const docTemplate = `{
         "/call/{service}": {
             "post": {
                 "description": "Call an api with name",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "call"
+                ],
                 "summary": "Call API",
                 "parameters": [
+                    {
+                        "description": "message",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Service"
+                        }
+                    },
                     {
                         "type": "string",
                         "description": "service name",
@@ -121,10 +136,30 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "call"
+                ],
                 "summary": "Message to return",
+                "parameters": [
+                    {
+                        "description": "message",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Service"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/model.Message"
                         }
@@ -134,14 +169,17 @@ const docTemplate = `{
         },
         "/products": {
             "post": {
-                "description": "Message ping/pong",
+                "description": "Add new product",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Product to record",
+                "tags": [
+                    "products"
+                ],
+                "summary": "Add new product",
                 "parameters": [
                     {
                         "description": "Product to record",
@@ -163,16 +201,48 @@ const docTemplate = `{
                 }
             }
         },
-        "/products-push/{name}": {
+        "/products-send/{name}": {
             "post": {
-                "description": "Message ping/pong",
+                "description": "Send product to kafka",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Product to record",
+                "tags": [
+                    "products"
+                ],
+                "summary": "Product to record kafka",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/products/{name}": {
+            "get": {
+                "description": "Get product with name",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Get product",
                 "parameters": [
                     {
                         "type": "string",
@@ -222,6 +292,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Service": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "boolean"
+                },
+                "message": {
                     "type": "string"
                 }
             }

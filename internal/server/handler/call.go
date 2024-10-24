@@ -12,6 +12,7 @@ import (
 	"github.com/worldline-go/telemetry_example/internal/model"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -20,19 +21,30 @@ import (
 //
 // @Summary     Call API
 // @Description Call an api with name
+// @Tags        call
 // @Produce     application/json
+// @Accept      application/json
+// @Param       data body model.Service true "message"
 // @Param       service path string true "service name"
 // @Router      /call/{service} [POST]
 // @Success     200 {object} model.Message{}
 // @Failure     400 {object} model.Message{}
 func (h *Handler) Call(c echo.Context) error {
-	tracer := otel.Tracer(c.Path())
-	ctx, span := tracer.Start(c.Request().Context(), "call")
+	var serviceBody model.Service
+	if err := c.Bind(&serviceBody); err != nil {
+		return c.JSON(http.StatusBadRequest, model.Message{
+			Message: "failed to bind request",
+		})
+	}
+
+	tracer := otel.Tracer("")
+	ctx, span := tracer.Start(c.Request().Context(), "call", trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 
 	service := c.Param("service")
 
 	span.SetAttributes(attribute.String("request.call.service", service))
+	span.SetAttributes(attribute.Bool("request.call.error", serviceBody.Error))
 
 	if service == "" {
 		return c.JSON(http.StatusBadRequest, model.Message{
@@ -47,8 +59,9 @@ func (h *Handler) Call(c echo.Context) error {
 	}
 
 	// call service
-	messageFromService := model.Message{
-		Data: "message from service " + config.ServiceName,
+	messageFromService := model.Service{
+		Message: serviceBody.Message,
+		Error:   serviceBody.Error,
 	}
 
 	messageByte, err := json.Marshal(messageFromService)
@@ -58,8 +71,7 @@ func (h *Handler) Call(c echo.Context) error {
 		})
 	}
 
-	request, err := http.NewRequestWithContext(
-		ctx,
+	request, err := http.NewRequestWithContext(ctx,
 		http.MethodPost, "/api/v1/message",
 		bytes.NewReader(messageByte),
 	)
@@ -69,7 +81,7 @@ func (h *Handler) Call(c echo.Context) error {
 		})
 	}
 
-	ctx, spanCall := tracer.Start(ctx, "call-"+service, trace.WithSpanKind(trace.SpanKindClient))
+	ctx, spanCall := tracer.Start(ctx, service, trace.WithSpanKind(trace.SpanKindClient))
 	defer spanCall.End()
 
 	// add context propagation
@@ -79,17 +91,9 @@ func (h *Handler) Call(c echo.Context) error {
 
 	responseMessage := model.Message{}
 
-	if err := h.Clients[service].Do(request, func(r *http.Response) error {
-		if err := klient.UnexpectedResponse(r); err != nil {
-			return err
-		}
+	if err := h.Clients[service].Do(request, klient.ResponseFuncJSON(&responseMessage)); err != nil {
+		spanCall.SetStatus(codes.Error, err.Error())
 
-		if err := json.NewDecoder(r.Body).Decode(&responseMessage); err != nil {
-			return err
-		}
-
-		return nil
-	}); err != nil {
 		return c.JSON(http.StatusInternalServerError, model.Message{
 			Message: err.Error(),
 		})
@@ -100,14 +104,35 @@ func (h *Handler) Call(c echo.Context) error {
 
 // @Summary     Message to return
 // @Description Message ping/pong
+// @Tags        call
 // @Accept      application/json
 // @Produce     application/json
+// @Param       data body model.Service true "message"
 // @Router      /message [POST]
 // @Success     200 {object} model.Message{}
+// @Failure     400 {object} model.Message{}
 func (h *Handler) Message(c echo.Context) error {
+	var serviceBody model.Service
+	if err := c.Bind(&serviceBody); err != nil {
+		return c.JSON(http.StatusBadRequest, model.Message{
+			Message: "failed to bind request",
+			Data:    err.Error(),
+		})
+	}
+
 	log.Info().Msgf("headers: %v", c.Request().Header)
-	_, span := otel.Tracer(c.Path()).Start(c.Request().Context(), "message")
+	_, span := otel.Tracer("").Start(c.Request().Context(), "message", trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 
-	return c.Stream(http.StatusOK, "application/json", c.Request().Body)
+	span.SetAttributes(attribute.String("request.message", serviceBody.Message))
+
+	if serviceBody.Error {
+		return c.JSON(http.StatusBadRequest, model.Message{
+			Message: "error from service " + config.ServiceName,
+		})
+	}
+
+	return c.JSON(http.StatusOK, model.Message{
+		Message: "message from service " + config.ServiceName,
+	})
 }

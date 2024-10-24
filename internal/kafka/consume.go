@@ -16,23 +16,14 @@ type Kafka struct {
 	Tracer *kotel.Tracer
 }
 
-func (k *Kafka) Consume(ctx context.Context, msg model.Product) error {
-	record := wkafka.CtxRecord(ctx)
-	record.Context = ctx
-
-	ctx, span := k.Tracer.WithProcessSpan(record)
+func (k *Kafka) Consume(ctx context.Context, product model.Product) error {
+	// use tracer's returned ctx for next spans
+	_, span := k.Tracer.WithProcessSpan(wkafka.CtxRecord(ctx))
 	defer span.End()
 
-	span.SetAttributes(attribute.String("product.name", msg.Name))
+	span.SetAttributes(attribute.String("product.name", product.Name))
 
-	log.Info().Str("product", msg.Name).Str("description", msg.Description).Msg("consume message")
-
-	id, err := k.DB.AddNewProduct(ctx, msg.Name, msg.Description)
-	if err != nil {
-		return err
-	}
-
-	log.Info().Int64("id", id).Msg("product added")
+	log.Info().Str("product", product.Name).Str("description", product.Description).Msg("consume message")
 
 	return nil
 }

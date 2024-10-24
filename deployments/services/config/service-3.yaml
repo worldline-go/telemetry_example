@@ -1,0 +1,8 @@
+enable_kafka_consumer: true
+kafka_config:
+  brokers:
+    - "kafka:9094"
+kafka_consumer:
+  topics:
+    - "post_products"
+  group_id: "service-3"

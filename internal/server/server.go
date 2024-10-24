@@ -111,9 +111,9 @@ func (r *Router) Register(basePath string, middlewares []echo.MiddlewareFunc, h 
 	}
 
 	z.GET("/api/swagger/*", echoSwagger.WrapHandler)
-	v1 := z.Group("/api/v1")
+	v1 := z.Group("/api/v1", middlewares...)
 
-	h.Register(v1, middlewares)
+	h.Register(v1)
 }
 
 func (r *Router) Start() error {

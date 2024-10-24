@@ -19,12 +19,14 @@ type Handler struct {
 	DB            *dbhandler.Handler
 }
 
-func (h *Handler) Register(group *echo.Group, middlewares []echo.MiddlewareFunc) {
-	group.GET("/count", h.GetCount, middlewares...)
-	group.POST("/count", h.PostCount, middlewares...)
+func (h *Handler) Register(group *echo.Group) {
+	group.GET("/count", h.GetCount)
+	group.POST("/count", h.PostCount)
 
-	group.POST("/call/:service", h.Call, middlewares...)
-	group.POST("/message", h.Message, middlewares...)
+	group.POST("/call/:service", h.Call)
+	group.POST("/message", h.Message)
 
-	group.POST("/products", h.AddProduct, middlewares...)
+	group.POST("/products", h.AddProduct)
+	group.GET("/products/:name", h.GetProduct)
+	group.POST("/products-send/:name", h.SendProduct)
 }
