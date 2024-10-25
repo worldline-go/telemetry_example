@@ -313,8 +313,8 @@ github.com/worldline-go/igmigrator v1.1.1 h1:uZF15IUVazjAyoNZRj1PSHDE50VtZxMF70h
 github.com/worldline-go/igmigrator v1.1.1/go.mod h1:a5fcKs5vBhvGv7bnVeDwd+UlTGIaE4qQkiCm4MOddrk=
 github.com/worldline-go/initializer v0.5.0 h1:SFw1i9pIkvBNJW0FOjeY0nzrV2dF3FbUsvJ0VxgzHGo=
 github.com/worldline-go/initializer v0.5.0/go.mod h1:D2kY4ybHESPxcfzqTtokZAe6bPD+A7Zo5QP2toVa9Fs=
-github.com/worldline-go/klient v0.8.4 h1:fb2wH8mQLH5IEoRGAnHuszrMBAn4n0jYl+2X/qqXA3k=
-github.com/worldline-go/klient v0.8.4/go.mod h1:6f5izMwF1HjcH0/TaU4iF5zRo73qlRVR3012QewTAPE=
+github.com/worldline-go/klient v0.8.5 h1:RsaKHlncUGxOnMiZMgg1DrkKpIw+7H8V84cWMjIHhvc=
+github.com/worldline-go/klient v0.8.5/go.mod h1:6f5izMwF1HjcH0/TaU4iF5zRo73qlRVR3012QewTAPE=
 github.com/worldline-go/logz v0.5.1 h1:jpbKUd1FbecEzs7/p1zFH7tFtQ5demmc89Fa2YTHL/Q=
 github.com/worldline-go/logz v0.5.1/go.mod h1:CbiHbwLTA6oKud62HbmfwG5fgSZ6ppVbkSdRv44X8Vc=
 github.com/worldline-go/struct2 v1.3.0 h1:JMPT9t/tsRkRr1yCbNeK2LJ6ZOi/2EOqEmRCh2RrRdI=

@@ -12,7 +12,7 @@ OpenTelemetry good to send send trace and metric data to different platform.
 | postgres             | postgres://postgres:postgres@postgres:5432/postgres |
 | kafka                | kafka://kafka:9092                                  |
 | redpanda             | http://localhost:7071                               |
-| example              | http://localhost:8080/api/v1/swagger/               |
+| example              | http://localhost:8080/api/swagger/                  |
 
 ![services](./_assets/services.excalidraw.svg)
 

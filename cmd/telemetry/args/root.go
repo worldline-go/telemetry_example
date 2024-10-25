@@ -90,9 +90,11 @@ func runRoot(ctx context.Context) error {
 	// http clients
 	clients := make(map[string]*klient.Client)
 	for name := range config.Application.API {
-		client, err := config.Application.API[name].New(klient.WithHeaderAdd(http.Header{
-			"Content-Type": []string{"application/json"},
-		}))
+		client, err := config.Application.API[name].New(
+			klient.WithHeaderAdd(http.Header{
+				"Content-Type": []string{"application/json"},
+			}),
+		)
 		if err != nil {
 			return fmt.Errorf("failed to create client [%s]; %w", name, err)
 		}

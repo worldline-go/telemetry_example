@@ -16,7 +16,7 @@ require (
 	github.com/worldline-go/igconfig v0.3.0
 	github.com/worldline-go/igmigrator v1.1.1
 	github.com/worldline-go/initializer v0.5.0
-	github.com/worldline-go/klient v0.8.4
+	github.com/worldline-go/klient v0.8.5
 	github.com/worldline-go/logz v0.5.1
 	github.com/worldline-go/swagger v1.0.0
 	github.com/worldline-go/tell v0.5.7
