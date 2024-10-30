@@ -10,6 +10,14 @@ query_frontend:
   trace_by_id:
     duration_slo: 5s
 
+usage_report:
+  reporting_enabled: false
+
+compactor:
+  compaction:
+    block_retention: 36h # total trace retention
+    max_block_bytes: 2000000000 # 2GB
+
 distributor:
   receivers:                           # this configuration will listen on all ports and protocols that tempo is capable of.
     otlp:
