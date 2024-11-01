@@ -19,8 +19,8 @@ require (
 	github.com/worldline-go/klient v0.8.5
 	github.com/worldline-go/logz v0.5.1
 	github.com/worldline-go/swagger v1.0.0
-	github.com/worldline-go/tell v0.5.7
-	github.com/worldline-go/tell/metric/metricecho v0.5.7
+	github.com/worldline-go/tell v0.5.8
+	github.com/worldline-go/tell/metric/metricecho v0.5.10
 	github.com/worldline-go/wkafka v0.3.4
 	github.com/ziflex/lecho/v3 v3.5.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.56.0
